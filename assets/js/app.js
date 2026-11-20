@@ -275,7 +275,7 @@ function pageHome(){
 
  <section class="sec dark"><div class="wrap craftband">
   ${VIDEO()}
-  <div><h2 style="font-size:clamp(38px,4vw,58px)">Chikankari, stitch by stitch</h2>
+  <div><h2>Chikankari, stitch by stitch</h2>
   <p style="font-size:18px;margin-top:18px;max-width:34em">Almost everything we make carries chikankari, the hand embroidery of Lucknow. This is how a piece comes to life before it reaches you.</p>
   ${PROCESS}
   <a class="btn light" href="#craft">About the craft</a></div>
@@ -287,7 +287,7 @@ function pageHome(){
  </div></section>
 
  <section class="sec band" style="background:var(--cream2)"><div class="wrap sizesband">
-  <div><h2 style="font-size:clamp(36px,3.8vw,54px)">Sizes 44 to 50</h2><p style="font-size:18px;color:var(--ink2);margin:18px 0 28px;max-width:28em">Our cotton chikankari kurtis with golden Banarasi boti are cut for sizes 44 to 50, in sage, pink and turquoise. Every other piece can be made to your measurements.</p><a class="btn" href="#p-W034">Shop the kurtis</a></div>
+  <div><h2>Sizes 44 to 50</h2><p style="font-size:18px;color:var(--ink2);margin:18px 0 28px;max-width:28em">Our cotton chikankari kurtis with golden Banarasi boti are cut for sizes 44 to 50, in sage, pink and turquoise. Every other piece can be made to your measurements.</p><a class="btn" href="#p-W034">Shop the kurtis</a></div>
   <div class="trip">${['Sage','Pink','Turquoise'].map(c=>`<a href="#p-W034" data-act="pickcol" data-c="W034" data-v="${c}"><img src="${IMG('w034-'+c.toLowerCase()+'-1')}" alt="${esc(w34.n)} in ${c.toLowerCase()}" loading="lazy"><span>${c}</span></a>`).join('')}</div>
  </div></section>
 
@@ -369,7 +369,7 @@ function pageShop(preset){
 let PDP={};
 function pagePDP(code){
  const p=prod(code);
- if(!p||p.hidden)return `<div class="wrap empty"><h1 style="font-size:44px">This piece isn't available right now</h1><p style="margin-top:16px"><a class="link" href="#shop">Back to the collection</a></p></div>`;
+ if(!p||p.hidden)return `<div class="wrap empty"><h1>This piece isn't available right now</h1><p style="margin-top:16px"><a class="link" href="#shop">Back to the collection</a></p></div>`;
  if(PDP.c!==code)PDP={c:code,col:leadColour(p),size:null,q:1};
  const isSaree=p.type==='saree'; if(isSaree)PDP.size='Free';
  const rec=S.fit&&S.fit.size;
@@ -446,7 +446,7 @@ function pageFit(){
  const fz=S.fit&&S.fit.size;
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Find my size</div><h1>Find my size</h1><p>Three measurements are enough to suggest your size. Every piece is made to order, so we also keep your measurements with your request.</p></div>
  <div class="wrap two"><div>${fitForm('page')}</div>
- <div><h2 style="font-size:32px;margin-bottom:14px">Size chart</h2><p class="small">Body measurements in inches.</p>
+ <div><h2 class="t3" style="margin-bottom:14px">Size chart</h2><p class="small">Body measurements in inches.</p>
  <table class="tbl"><thead><tr><th>Size</th><th></th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead><tbody>${SIZES.map(z=>`<tr class="${fz===z.s?'hl':''}"><td><b>${z.s}</b></td><td>${z.l}</td><td>${z.b}</td><td>${z.w}</td><td>${z.h}</td></tr>`).join('')}</tbody></table>
  <p class="small" style="margin-top:14px">Between two sizes? Choose the larger one.</p></div></div>`;
 }
@@ -458,7 +458,7 @@ function sumRows(items,cc,g){const k=cty(cc);let sub=0,onreq=false;items.forEach
  return `<div class="sumrow"><span>Pieces</span><span>${sub?money(sub,cc)+(onreq?' +':''):'On request'}</span></div><div class="sumrow"><span>Shipping${k.code==='IN'?'':' by India Post Speed Post'}</span><span>${k.code==='IN'?'Free':'about '+money(sh,cc)}</span></div><div class="tot"><span>Estimated total</span><b>${sub?money(sub+sh,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp'}</b></div>`}
 function bagLine(it,i){
  const p=prod(it.c);if(!p)return '';
- return `<div class="line"><a class="th" href="#p-${p.c}">${thumb(p,it.col)}</a><div><a href="#p-${p.c}" style="text-decoration:none;font-family:var(--serif);font-size:22px">${esc(p.n)}</a><div class="small">${p.c}, ${esc(it.col)}, size ${it.size==='Free'?'free':it.size}</div>
+ return `<div class="line"><a class="th" href="#p-${p.c}">${thumb(p,it.col)}</a><div><a href="#p-${p.c}" class="bname">${esc(p.n)}</a><div class="small">${p.c}, ${esc(it.col)}, size ${it.size==='Free'?'free':it.size}</div>
  <div style="display:flex;gap:16px;align-items:center;margin-top:10px"><div class="qty"><button data-act="bq-" data-i="${i}" aria-label="Decrease">−</button><span>${it.q}</span><button data-act="bq+" data-i="${i}" aria-label="Increase">+</button></div><button class="textlink" data-act="brm" data-i="${i}">Remove</button></div></div>
  <div>${priced(p.inr)?price(p.inr*it.q):'On request'}</div></div>`;
 }
@@ -467,7 +467,7 @@ function pageBag(){
  const k=cty();
  return `<div class="wrap pagehead"><h1>Your bag</h1><p>Review your pieces, then send us a request. Nothing is charged on the website.</p></div>
  <div class="wrap two"><div>${S.bag.map(bagLine).join('')}</div>
- <aside class="summary"><h2 style="font-size:30px">Summary</h2><p class="small" style="margin:6px 0 0">Delivering to ${k.name}</p>${sumRows(S.bag,S.country,S.geo)}
+ <aside class="summary"><h2 class="t3">Summary</h2><p class="small" style="margin:6px 0 0">Delivering to ${k.name}</p>${sumRows(S.bag,S.country,S.geo)}
  <p class="small">${k.code==='IN'?'Free shipping within India.':'Shipping is the India Post Speed Post rate to '+k.name+' for the weight of your pieces, with tracking.'} We confirm the final amount with you on WhatsApp before you pay.</p>
  <a class="btn wide" href="#request">Continue to your request</a><a class="link" href="#shop" style="display:inline-block;margin-top:16px">Keep browsing</a></aside></div>`;
 }
@@ -495,7 +495,7 @@ function pageRequest(){
   <div class="err" id="reqerr" role="alert"></div>
   <button class="btn" type="submit" id="sendbtn">Send order request</button>
  </form>
- <aside class="summary"><h2 style="font-size:30px;margin-bottom:6px">Your request</h2>
+ <aside class="summary"><h2 class="t3" style="margin-bottom:6px">Your request</h2>
  ${S.bag.map(it=>{const p=prod(it.c);return `<div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px"><span>${esc(p.n)}<br><span class="small">${esc(it.col)}, size ${it.size==='Free'?'free':it.size}, qty ${it.q}</span></span><span>${priced(p.inr)?price(p.inr*it.q):'On request'}</span></div>`}).join('')}
  ${sumRows(S.bag,S.country,S.geo)}<p class="small" style="margin:0">Made to order: ready ${C.leadTime} after payment is confirmed.</p></aside></div>`;
 }
@@ -529,7 +529,7 @@ function pageCraft(){
   ${VIDEO()}
  </section>
  <section class="sec dark"><div class="wrap craftband" style="grid-template-columns:1fr 1fr">
-  <div><h2 style="font-size:clamp(36px,3.8vw,54px)">How a piece is made</h2>${PROCESS}</div>
+  <div><h2>How a piece is made</h2>${PROCESS}</div>
   <figure><div class="archimg"><img src="${IMG('w006-peach-2')}" alt="Chikankari flowers on peach mul chanderi" loading="lazy"></div><figcaption>Chikankari on mul chanderi, from our frock kurta set</figcaption></figure>
  </div></section>
  <section class="sec"><div class="wrap">
@@ -560,8 +560,8 @@ function pageStory(){
 
  <section class="sec dark"><div class="wrap craftband">
   ${VIDEO()}
-  <div><div class="label" style="font-family:var(--serif);font-style:italic;color:var(--goldline);font-size:19px">The hands behind it</div>
-  <h2 style="font-size:clamp(36px,3.8vw,54px);margin-top:12px">Chikankari, stitch by stitch</h2>
+  <div><div class="label elabel" style="color:var(--goldline)">The hands behind it</div>
+  <h2 style="margin-top:12px">Chikankari, stitch by stitch</h2>
   ${PROCESS}</div>
  </div></section>
 
@@ -641,7 +641,7 @@ const adminOrders=()=>S.admin.live||S.orders;
 function adminMsg(o){const first=o.name.replace(/^Sample: /,'').split(' ')[0];return `Hi ${first}, thank you for your order request ${o.id} with Vidisha Ethnics.\n\nTotal: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}\n${shipLine(o)}.\nOnce we receive payment we'll start making your piece. It will be ready in ${C.leadTime}.`}
 function pageAdmin(){
  const A=S.admin;
- if(!A.auth)return `<div class="admin"><div class="pin"><img src="${LOGO}" alt="Vidisha Ethnics"><h1 style="font-size:32px;margin-bottom:6px">Admin</h1><p class="small">${LIVE?'Enter your admin key.':'Preview mode. PIN: 2025'}</p><form data-form="pin" class="form" style="margin-top:16px"><input class="t" name="pin" type="password" aria-label="${LIVE?'Admin key':'PIN'}" placeholder="${LIVE?'Admin key':'PIN'}" style="text-align:center"><div class="err" id="pinerr" role="alert"></div><button class="btn" type="submit">Sign in</button></form><a class="link" href="#" style="display:inline-block;margin-top:18px;font-size:14px">Back to the shop</a></div></div>`;
+ if(!A.auth)return `<div class="admin"><div class="pin"><img src="${LOGO}" alt="Vidisha Ethnics"><h1 class="t3" style="margin-bottom:6px">Admin</h1><p class="small">${LIVE?'Enter your admin key.':'Preview mode. PIN: 2025'}</p><form data-form="pin" class="form" style="margin-top:16px"><input class="t" name="pin" type="password" aria-label="${LIVE?'Admin key':'PIN'}" placeholder="${LIVE?'Admin key':'PIN'}" style="text-align:center"><div class="err" id="pinerr" role="alert"></div><button class="btn" type="submit">Sign in</button></form><a class="link" href="#" style="display:inline-block;margin-top:18px;font-size:14px">Back to the shop</a></div></div>`;
  const top=`<div class="atop"><div class="wrap"><a class="logo" href="#"><img src="${LOGO}" alt="Vidisha Ethnics"></a><div class="tabs" role="tablist">${[['orders','Orders'],['products','Products'],['settings','Settings']].map(([k,l])=>`<button role="tab" aria-selected="${A.tab===k}" class="${A.tab===k?'on':''}" data-act="atab" data-v="${k}">${l}</button>`).join('')}</div><button class="textlink" data-act="logout">Sign out</button></div></div>`;
  let body='';
  if(A.tab==='orders'){
@@ -653,7 +653,7 @@ function pageAdmin(){
   body=`<div class="kpis"><div class="kpi"><b>${cnt('New')}</b><span>New requests to contact</span></div><div class="kpi"><b>${cnt('Payment pending')}</b><span>Awaiting payment</span></div><div class="kpi"><b>${cnt('Confirmed')+cnt('In making')}</b><span>Being made</span></div><div class="kpi"><b>${inrFmt(open.reduce((a,o)=>a+o.items.reduce((x,it)=>{const p=prod(it.c);return x+(p&&priced(p.inr)?p.inr*it.q:0)},0),0))}</b><span>Open orders at India prices</span></div></div>
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div class="chips">${['All',...STATUSES].map(s=>`<button class="chip ${A.filter===s?'on':''}" data-act="afilter" data-v="${s}">${s}${s!=='All'?` (${cnt(s)})`:''}</button>`).join('')}</div><button class="btn ghost" style="min-height:40px;padding:0 16px" data-act="csv">Copy as CSV</button></div>
   <div class="agrid"><div><table class="atable"><thead><tr><th>Request</th><th>Customer</th><th>Items</th><th>Value</th><th>Status</th></tr></thead><tbody>${list.map(o=>`<tr class="${A.sel===o.id?'sel':''}"><td><button class="textlink" data-act="asel" data-v="${o.id}">${o.id}</button><div class="small">${new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div></td><td>${esc(o.name)}<div class="small">${esc(o.city)}, ${esc(o.country)}</div></td><td>${o.items.map(it=>`${it.c} × ${it.q}`).join('<br>')}</td><td>${totalLabel(orderTotal(o),orderOnReq(o),o.cc).replace(' + pieces priced on request',' +')}</td><td><select class="st" data-act="astatus" data-v="${o.id}" aria-label="Status for ${o.id}">${STATUSES.map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`).join('')||`<tr><td colspan="5" class="small" style="padding:30px;text-align:center">No requests with this status.</td></tr>`}</tbody></table></div>
-  <div>${sel?`<div class="apanel" style="margin-top:0"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:28px">${sel.id}</h2><span class="pill ${sel.status.split(' ')[0]}">${sel.status}</span></div><p class="small" style="margin:4px 0 14px">${new Date(sel.date).toLocaleString('en-IN')}${sel.sample?' (sample)':''}</p>
+  <div>${sel?`<div class="apanel" style="margin-top:0"><div style="display:flex;justify-content:space-between;align-items:center"><h2 class="t3">${sel.id}</h2><span class="pill ${sel.status.split(' ')[0]}">${sel.status}</span></div><p class="small" style="margin:4px 0 14px">${new Date(sel.date).toLocaleString('en-IN')}${sel.sample?' (sample)':''}</p>
    <p style="margin:0"><b>${esc(sel.name)}</b><br>${esc(sel.wa)}${sel.email?'<br>'+esc(sel.email):''}<br>${esc(sel.city)}, ${esc(sel.country)}</p>
    <div style="margin:14px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px">${sel.items.map(it=>{const p=prod(it.c);return `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>${it.c} ${p?esc(p.n):''}<br><span class="small">${esc(it.col)}, size ${it.size}, qty ${it.q}</span></span><span>${p&&priced(p.inr)?money(amount(p.inr,sel.cc)*it.q,sel.cc):'On request'}</span></div>`}).join('')}</div>
    <p style="font-size:14px;margin:0 0 6px"><b>Measurements (${esc(sel.m.unit)})</b><br>Bust ${esc(sel.m.bust)||'–'}, waist ${esc(sel.m.waist)||'–'}, hip ${esc(sel.m.hip)||'–'}, shoulder ${esc(sel.m.shoulder)||'–'}, height ${esc(sel.m.height)||'–'}${sel.m.length?', length '+esc(sel.m.length):''}</p>
@@ -661,11 +661,11 @@ function pageAdmin(){
    <div style="display:grid;gap:8px;margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="${wa(adminMsg(sel),sel.wa)}">Message customer on WhatsApp</a><button class="btn ghost" data-act="copymsg" data-v="${sel.id}">Copy payment message</button></div></div>`:`<div class="apanel" style="margin-top:0"><p class="small" style="margin:0">Select a request to see measurements, notes and a ready-made WhatsApp message.</p></div>`}</div></div>`;
  }
  if(A.tab==='products'){
-  body=`<div class="apanel"><h2 style="font-size:28px">Products</h2><p class="small" style="margin:6px 0 0">Change a price or hide a piece. ${LIVE?'Changes are saved to the Products tab of your order sheet and show on the site for everyone.':'In preview mode, changes are saved in this browser only.'} To add photographs, send them to your developer or place them in assets/img.</p></div>
+  body=`<div class="apanel"><h2 class="t3">Products</h2><p class="small" style="margin:6px 0 0">Change a price or hide a piece. ${LIVE?'Changes are saved to the Products tab of your order sheet and show on the site for everyone.':'In preview mode, changes are saved in this browser only.'} To add photographs, send them to your developer or place them in assets/img.</p></div>
   <table class="atable" style="margin-top:14px"><thead><tr><th>Piece</th><th>Category</th><th>India price (₹)</th><th>Abroad (USD / GBP)</th><th>Photos</th><th>On site</th></tr></thead><tbody>${PRODUCTS().map(p=>{const n=Object.values(p.ph||{}).flat().length;return `<tr><td><b>${p.c}</b> ${esc(p.n)}<div class="small">${p.cols.length} colours</div></td><td>${p.cat}</td><td><input class="t" style="width:110px;padding:7px" inputmode="numeric" data-act="aprice" data-v="${p.c}" value="${p.inr||''}" placeholder="On request" aria-label="India price for ${p.c}"></td><td class="small">${price(p.inr,'US')}<br>${price(p.inr,'GB')}</td><td>${n?`<span class="pill Confirmed">${n} photo${n>1?'s':''}</span>`:'<span class="pill New">Needs photos</span>'}</td><td><label class="toggle"><input type="checkbox" data-act="ahide" data-v="${p.c}" ${p.hidden?'':'checked'} aria-label="Show ${p.c} on site"><i></i></label></td></tr>`}).join('')}</tbody></table>`;
  }
  if(A.tab==='settings'){
-  body=`<div class="apanel" style="max-width:760px"><h2 style="font-size:28px;margin-bottom:14px">Settings</h2>
+  body=`<div class="apanel" style="max-width:760px"><h2 class="t3" style="margin-bottom:14px">Settings</h2>
   <p>These live in <b>assets/js/config.js</b> so they can't be changed by accident. Current values:</p>
   <table class="tbl"><tbody><tr><td>WhatsApp number</td><td>${C.whatsapp?'+'+esc(C.whatsapp):'<span class="pill New">Not set</span>'}</td></tr><tr><td>Order sheet connection</td><td>${LIVE?'<span class="pill Confirmed">Connected</span>':'<span class="pill New">Preview mode</span>'}</td></tr><tr><td>International multiplier</td><td>${C.intlMultiplier}×</td></tr>
   ${C.countries.filter(k=>k.code!=='IN').map(k=>`<tr><td>${k.name}</td><td>₹${k.rate} per ${k.currency}. Example: ₹3,650 shows as ${price(3650,k.code)}</td></tr>`).join('')}</tbody></table>
@@ -761,7 +761,7 @@ document.addEventListener('click',e=>{
   case 'q+':PDP.q=Math.min(10,PDP.q+1);rerender();break;
   case 'add':{if(!PDP.size){const h=$('#sizehint');if(h){h.textContent='Please choose a size, or use Find my size.';h.scrollIntoView({block:'center',behavior:'smooth'})}return}
    const ex=S.bag.find(i=>i.c===PDP.c&&i.col===PDP.col&&i.size===PDP.size);if(ex)ex.q+=PDP.q;else S.bag.push({c:PDP.c,col:PDP.col,size:PDP.size,q:PDP.q});save();rerender();
-   const p=prod(PDP.c);openDrawer(`<h2>Added to your bag</h2><div class="line" style="grid-template-columns:96px 1fr"><div class="th">${thumb(p,PDP.col)}</div><div><b style="font-family:var(--serif);font-size:21px;font-weight:400">${esc(p.n)}</b><div class="small">${esc(PDP.col)}, size ${PDP.size==='Free'?'free':PDP.size}, qty ${PDP.q}</div><div style="margin-top:6px">${price(p.inr*PDP.q)}</div></div></div><div style="display:grid;gap:10px;margin-top:24px"><a class="btn" href="#request" data-act="close-nav">Send order request</a><a class="btn ghost" href="#bag" data-act="close-nav">View bag</a><button class="textlink" data-act="close" style="justify-self:start;margin-top:8px">Keep browsing</button></div>`);break}
+   const p=prod(PDP.c);openDrawer(`<h2>Added to your bag</h2><div class="line" style="grid-template-columns:96px 1fr"><div class="th">${thumb(p,PDP.col)}</div><div><b class="t4">${esc(p.n)}</b><div class="small">${esc(PDP.col)}, size ${PDP.size==='Free'?'free':PDP.size}, qty ${PDP.q}</div><div style="margin-top:6px">${price(p.inr*PDP.q)}</div></div></div><div style="display:grid;gap:10px;margin-top:24px"><a class="btn" href="#request" data-act="close-nav">Send order request</a><a class="btn ghost" href="#bag" data-act="close-nav">View bag</a><button class="textlink" data-act="close" style="justify-self:start;margin-top:8px">Keep browsing</button></div>`);break}
   case 'openfit':openDrawer(`<h2>Find my size</h2><p class="small" style="margin-bottom:18px">We'll suggest a size and keep your measurements for your request.</p>${fitForm('drawer')}<p class="small" style="margin-top:18px"><a class="link" href="#fit" data-act="close-nav">See the size chart</a></p>`);break;
   case 'close':closeDrawer();break;
   case 'unit':{const form=t.closest('form');form.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b===t));const hid=form.querySelector('[name=unit]');if(hid)hid.value=v;form.dataset.unit=v;S.fit=Object.assign({},S.fit||{},{unit:v});save();break}
