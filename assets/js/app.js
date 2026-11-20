@@ -42,7 +42,7 @@ const IMG=n=>n.startsWith('data:')?n:'assets/img/'+n+'.webp';
 const cty=(cc=S.country)=>C.countries.find(c=>c.code===cc)||C.countries[0];
 const priced=inr=>typeof inr==='number'&&inr>0;
 const abroad=(g=S.geo)=>!!g&&g!=='IN';
-function roundTo(v,k){if(k.code==='IN')return Math.ceil((v+1)/50)*50-1;if(k.round==='nine')return v<100?Math.ceil(v):Math.ceil((v+1)/10)*10-1;return Math.ceil(v/k.round)*k.round}
+function roundTo(v,k){if(k.code==='IN')return Math.ceil(v/50)*50;if(k.round==='nine')return v<100?Math.ceil(v):Math.ceil((v+1)/10)*10-1;return Math.ceil(v/k.round)*k.round}
 /* Outside India (by delivery country or by where the visitor is browsing from) prices are the India price x intlMultiplier. */
 function amount(inr,cc=S.country,g=S.geo){if(!priced(inr))return null;const k=cty(cc);if(k.code==='IN'&&!abroad(g))return inr;return roundTo(inr*C.intlMultiplier/k.rate,k)}
 /* India Post International Speed Post (EMS), merchandise tariff plus GST. Returns rupees. */
