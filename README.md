@@ -36,3 +36,10 @@ Until `appsScriptUrl` is set, the site runs in preview mode. Requests and admin 
 - Product images are shown at no more than about 540 px wide, so a 1080 px file is sharp on retina screens.
 - The current images come from Instagram videos. Each one is the sharpest frame in its clip, lightly denoised, upscaled 1.5× and sharpened. Replace them with shoot photos as they arrive.
 - Never stretch an image across the full page width unless it is at least 2400 px wide.
+
+## Prices outside India and shipping
+- Visitors browsing from outside India (detected by IP, with the time zone as a fallback) see the India price × `intlMultiplier` (1.5). The country picker sets the currency.
+- Overseas shipping is estimated from India Post International Speed Post (merchandise) rates in `config.js` (`ems: [first 250 g, each extra 250 g]`) plus GST. Check indiapost.gov.in now and then and update the numbers.
+
+## Share links
+Each product has a share page at `/p/CODE/` that shows the right photo in WhatsApp previews. After adding or renaming products, run `node tools/build_share.js .` and resize the photos into `assets/og/`.

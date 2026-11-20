@@ -12,7 +12,8 @@ const store={get(k,d){try{const v=localStorage.getItem('ve_'+k);return v?JSON.pa
 
 /* ---------- state ---------- */
 const S={
- country:store.get('country','IN'),
+ country:store.get('country',null),
+ geo:store.get('geo',null),
  bag:store.get('bag',[]),
  wish:store.get('wish',[]),
  fit:store.get('fit',null),
@@ -27,6 +28,11 @@ if(!S.orders){S.orders=[
  {id:'VE-1119-311',date:'2026-11-19T18:40:00',name:'Sample: Meera K.',wa:'+971 50 000 0002',email:'',city:'Dubai',country:'United Arab Emirates',items:[{c:'W020',col:'Powder blue',size:'42',q:2}],m:{unit:'in',bust:'40',waist:'34',hip:'43',shoulder:'15',height:"5'6\""},by:'2026-12-10',notes:'',status:'New',cc:'AE',sample:1},
  {id:'VE-1112-118',date:'2026-11-12T09:05:00',name:'Sample: Priya S.',wa:'+44 7700 900003',email:'',city:'London',country:'United Kingdom',items:[{c:'W011',col:'Mustard',size:'40',q:1}],m:{unit:'cm',bust:'97',waist:'81',hip:'104',shoulder:'',height:'165'},by:'',notes:'',status:'Shipped',cc:'GB',sample:1}
 ];}
+/* Where the visitor is browsing from. A quick guess from the time zone, then confirmed by IP in boot(). */
+function tzGuess(){try{const z=Intl.DateTimeFormat().resolvedOptions().timeZone||'';if(/Kolkata|Calcutta/.test(z))return 'IN';if(/Colombo/.test(z))return 'LK';if(/Kuala_Lumpur|Kuching/.test(z))return 'MY';if(/Dubai/.test(z))return 'AE';if(/London/.test(z))return 'GB';if(/^America\//.test(z))return 'US';return z?'XX':'IN'}catch(e){return 'IN'}}
+if(!S.geo)S.geo=tzGuess();
+function defaultCountry(g){return g==='IN'?'IN':(C.countries.some(k=>k.code===g)?g:'US')}
+if(!S.country)S.country=defaultCountry(S.geo);
 function save(){store.set('country',S.country);store.set('bag',S.bag);store.set('wish',S.wish);store.set('fit',S.fit);store.set('over',S.over);store.set('orders',S.orders)}
 
 /* ---------- helpers ---------- */
@@ -35,7 +41,15 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const IMG=n=>n.startsWith('data:')?n:'assets/img/'+n+'.webp';
 const cty=(cc=S.country)=>C.countries.find(c=>c.code===cc)||C.countries[0];
 const priced=inr=>typeof inr==='number'&&inr>0;
-function amount(inr,cc=S.country){if(!priced(inr))return null;const k=cty(cc);if(k.code==='IN')return inr;const v=inr*C.intlMultiplier/k.rate;if(k.round==='nine')return Math.ceil((v+1)/10)*10-1;return Math.ceil(v/k.round)*k.round}
+const abroad=(g=S.geo)=>!!g&&g!=='IN';
+function roundTo(v,k){if(k.code==='IN')return Math.ceil((v+1)/50)*50-1;if(k.round==='nine')return v<100?Math.ceil(v):Math.ceil((v+1)/10)*10-1;return Math.ceil(v/k.round)*k.round}
+/* Outside India (by delivery country or by where the visitor is browsing from) prices are the India price x intlMultiplier. */
+function amount(inr,cc=S.country,g=S.geo){if(!priced(inr))return null;const k=cty(cc);if(k.code==='IN'&&!abroad(g))return inr;return roundTo(inr*C.intlMultiplier/k.rate,k)}
+/* India Post International Speed Post (EMS), merchandise tariff plus GST. Returns rupees. */
+const WT={saree:700,set:600,coord:600,frock:550,kurta:350,short:300};
+function shipGrams(items){return items.reduce((a,it)=>{const p=prod(it.c);return a+(p?(WT[p.type]||500)*it.q:0)},0)+(C.shipping.packGrams||150)}
+function shipINR(items,cc=S.country){const k=cty(cc);if(k.code==='IN'||!k.ems||!items.length)return 0;const slabs=Math.max(1,Math.ceil(shipGrams(items)/250));return (k.ems[0]+(slabs-1)*k.ems[1])*(1+(C.shipping.gst||0))}
+function shipAmount(items,cc=S.country){const v=shipINR(items,cc);if(!v)return 0;const k=cty(cc);return roundTo(v/k.rate,k)}
 function money(v,cc=S.country){const k=cty(cc);return k.code==='IN'?'₹'+Math.round(v).toLocaleString('en-IN'):k.symbol+Math.round(v).toLocaleString('en-US')}
 const price=(inr,cc)=>priced(inr)?money(amount(inr,cc),cc):'Price on request';
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('on'),2600)}
@@ -191,7 +205,7 @@ function header(active){
  const n=S.bag.reduce((a,i)=>a+i.q,0);
  const nav=NAV.map(([h,t])=>`<a href="#${h}" class="${active===h?'on':''}">${t}</a>`).join('');
  return `${LIVE||C.whatsapp?'':`<div class="demo">Preview mode. Order requests stay in this browser until the order sheet is connected. <a href="#admin">Admin</a></div>`}
- <div class="announce">Handmade to order and delivered across India, the USA, the UK, Sri Lanka, Malaysia and the UAE</div>
+ <div class="announce"><span class="long">Handmade to order and delivered across India, the USA, the UK, Sri Lanka, Malaysia and the UAE</span><span class="short">Made to order. Delivered to India and 5 countries</span></div>
  <header class="site"><div class="wrap hbar">
   <div style="display:flex;align-items:center;gap:14px"><button class="menuBtn" data-act="menu" aria-label="Menu" aria-expanded="false" style="background:none;border:0;padding:8px 0"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18" stroke="#341A05" stroke-width="1.5"/></svg></button><nav class="hnav" aria-label="Main">${nav}</nav></div>
   <a class="logo" href="#" aria-label="Vidisha Ethnics, home"><img src="${LOGO}" alt="Vidisha Ethnics" width="172" height="61"></a>
@@ -199,7 +213,7 @@ function header(active){
    <span class="hide-s">${countrySelect('ship1')}</span>
    <a href="#fit" class="hide-s">Find my size</a>
    <a href="#wishlist" aria-label="Wishlist, ${S.wish.length} saved">${heartSVG.replace('viewBox','class="icon" viewBox')}</a>
-   <a href="#bag" aria-label="Request bag, ${n} items"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#341A05" stroke-width="1.4"/></svg><span class="count">${n}</span></a>
+   <a href="#bag" aria-label="Bag, ${n} items"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="#341A05" stroke-width="1.4"/></svg><span class="count">${n}</span></a>
   </div></div>
   <nav class="mnav" id="mnav" aria-label="Mobile">${nav}<a href="#fit">Find my size</a><a href="#shipping">Shipping and exchanges</a><a href="#contact">Contact</a><div style="padding-top:14px">${countrySelect('ship2')}</div></nav>
  </header>`;
@@ -217,7 +231,8 @@ function tile(p){
  const tag=(p.tags||[]).includes('new')?'New':(p.tags||[]).includes('loved')?'Most loved':'';
  const on=S.wish.includes(p.c);
  const main=ph.length?`<img src="${ph[0]}" alt="${esc(p.n)} in ${esc(c)}" loading="lazy">`:detail(p,c,{});
- const alt=ph.length>1?`<img class="alt" src="${ph[1]}" alt="" loading="lazy">`:ph.length?'':figure(p,c,{cls:'alt',vb:'-30 0 300 560',bg:'#FCF3EC'});
+ const altSrc=ph.length>1?ph[1]:(()=>{const o=Object.keys(p.ph||{}).find(x=>x!==c);return o?IMG(p.ph[o][0]):null})();
+ const alt=altSrc?`<img class="alt" src="${altSrc}" alt="" loading="lazy">`:ph.length?'':figure(p,c,{cls:'alt',vb:'-30 0 300 560',bg:'#FCF3EC'});
  return `<article class="tile"><a class="im" href="#p-${p.c}" aria-label="${esc(p.n)}">${main}${alt}${tag?`<span class="tag">${tag}</span>`:''}${ph.length?'':'<span class="soon">Photographs coming soon</span>'}</a>
  <button class="heart ${on?'on':''}" data-act="wish" data-c="${p.c}" aria-pressed="${on}" aria-label="${on?'Remove from':'Save to'} wishlist">${heartSVG}</button>
  <div class="meta"><a class="nm" href="#p-${p.c}">${esc(p.n)}</a><span class="cr">${esc(sub(p))}</span><span class="pr">${price(p.inr)}</span>
@@ -228,6 +243,9 @@ const PROCESS=`<ol class="process">
  <li><span class="n">2</span><div><h3>It is stitched on a hoop</h3><p>The fabric is stretched on a small hoop and embroidered by hand, stitch by stitch: flat petals, raised knots, and the soft glow of shadow work. One kurta can take days.</p></div></li>
  <li><span class="n">3</span><div><h3>It is washed and finished</h3><p>The finished piece is washed to lift the blue outlines, then starched, pressed and checked before it reaches us.</p></div></li></ol>`;
 const VIDEO=(cap=true)=>`<figure><div class="archimg"><video src="assets/img/artisan.mp4" poster="${IMG('artisan')}" autoplay muted loop playsinline preload="metadata" aria-label="An artisan stitching chikankari on a hoop"></video></div>${cap?'<figcaption>An artisan at work on a chikankari motif</figcaption>':''}</figure>`;
+const FOUNDER=(sound,lazy=true)=>`<figure class="fvid"><div class="archimg tall"><video src="assets/img/vidisha.mp4" poster="${IMG('vidisha')}" autoplay muted loop playsinline preload="${lazy?'none':'metadata'}" aria-label="Vidisha Chaurasia, founder of Vidisha Ethnics"></video>${sound?'<button type="button" class="snd" data-act="snd" aria-pressed="false">Play with sound</button>':''}</div><figcaption>Vidisha Chaurasia, founder</figcaption></figure>`;
+const SITE='https://vidishaethnics.com';
+const shareUrl=c=>`${SITE}/p/${c}/`;
 const COUNTRY_NAMES=['India','USA','UK','Sri Lanka','Malaysia','UAE'];
 
 /* ---------- pages ---------- */
@@ -302,7 +320,7 @@ function pageHome(){
  </div></section>
 
  <section class="sec" style="padding-top:0"><div class="wrap teaser">
-  <figure><div class="archimg"><img src="${IMG('artisan-2')}" alt="Hands embroidering a chikankari motif on a hoop" loading="lazy"></div></figure>
+  ${FOUNDER(false)}
   <div>${ornament('sm')}<blockquote style="margin-top:26px">Clothing made by hand should reach the person who wears it with nothing lost on the way.</blockquote>
   <p class="who">Vidisha Chaurasia started Vidisha Ethnics in Bengaluru in March 2025. We buy directly from artisan clusters and make each piece only when you ask for it.</p>
   <a class="btn ghost" href="#story">Read our story</a></div>
@@ -355,16 +373,21 @@ function pagePDP(code){
  if(PDP.c!==code)PDP={c:code,col:leadColour(p),size:null,q:1};
  const isSaree=p.type==='saree'; if(isSaree)PDP.size='Free';
  const rec=S.fit&&S.fit.size;
- const phs=photoOf(p,PDP.col);
+ const own=photoOf(p,PDP.col), lead=leadColour(p);
+ const stand=!own.length&&p.ph&&Object.keys(p.ph).length;
+ const shownCol=stand?(p.ph[lead]?lead:Object.keys(p.ph)[0]):PDP.col;
+ const phs=stand?photoOf(p,shownCol):own;
  const tiles=[];
- phs.forEach((src,i)=>tiles.push(`<figure><img src="${src}" alt="${esc(p.n)} in ${esc(PDP.col)}, photo ${i+1}" ${i?'loading="lazy"':''}></figure>`));
- if(phs.length%2===1){const others=Object.keys(p.ph||{}).filter(c=>c!==PDP.col);const extra=[];others.forEach(c=>(p.ph[c]||[]).forEach(n=>extra.push([c,n])));extra.slice(0,phs.length===1?3:1).forEach(([c,n])=>tiles.push(`<figure><button data-act="col" data-v="${esc(c)}" style="all:unset;cursor:pointer;display:block;width:100%;height:100%" aria-label="See ${esc(c)}"><img src="${IMG(n)}" alt="${esc(p.n)} in ${esc(c)}" loading="lazy"></button><figcaption>${esc(c)}</figcaption></figure>`))}
- if(tiles.length%2===1||!phs.length)tiles.push(`<figure>${detail(p,PDP.col,{})}<figcaption>${phs.length?'Colour and work':'Photographs coming soon. Colour and work shown.'}</figcaption></figure>`);
+ phs.forEach((src,i)=>tiles.push(`<figure class="${i===0?'lead':''}"><button type="button" class="zoom" data-act="zoom" data-v="${src}" aria-label="Enlarge photo ${i+1}"><img src="${src}" alt="${esc(p.n)} in ${esc(shownCol)}, photo ${i+1}" ${i?'loading="lazy"':'fetchpriority="high"'}></button>${i===0&&stand?`<figcaption>Shown in ${esc(shownCol)}. Yours will be made in ${esc(PDP.col)}.</figcaption>`:''}</figure>`));
+ const need=phs.length===1?2:phs.length%2===0?1:0;if(need){const others=Object.keys(p.ph||{}).filter(c=>c!==shownCol);const extra=[];others.forEach(c=>(p.ph[c]||[]).forEach(n=>extra.push([c,n])));extra.slice(0,need).forEach(([c,n])=>tiles.push(`<figure><button data-act="col" data-v="${esc(c)}" style="all:unset;cursor:pointer;display:block;width:100%;height:100%" aria-label="See ${esc(c)}"><img src="${IMG(n)}" alt="${esc(p.n)} in ${esc(c)}" loading="lazy"></button><figcaption>${esc(c)}</figcaption></figure>`))}
+ if(!phs.length)tiles.push(`<figure>${detail(p,PDP.col,{})}<figcaption>${phs.length?'Colour and work':'Photographs coming soon. Colour and work shown.'}</figcaption></figure>`);
  if(!phs.length)tiles.push(`<figure>${figure(p,PDP.col,{vb:'-30 0 300 560',bg:'#FCF3EC'})}<figcaption>Illustrated silhouette</figcaption></figure>`);
  const care=CARE[p.care]||CARE.dry;
  const related=visible().filter(x=>x.c!==p.c&&(fam(x)===fam(p)||x.cat===p.cat)).sort(featuredSort).slice(0,4);
  const k=cty();
- const note=!priced(p.inr)?`We'll confirm the price for ${k.code==='IN'?'India':k.name} on WhatsApp.`:k.code==='IN'?'Price for delivery in India. Free shipping.':`Price for ${k.name}. Shipping is quoted on WhatsApp before you pay.`;
+ const one=[{c:p.c,q:1}];
+ const note=!priced(p.inr)?`We'll confirm the price for ${k.code==='IN'?'India':k.name} on WhatsApp.`:k.code==='IN'?(abroad()?'Price for orders placed from outside India. Free shipping within India.':'Price for delivery in India. Free shipping.'):`Price for ${k.name}. India Post Speed Post shipping is about ${money(shipAmount(one),k.code)} for this piece.`;
+ const cvt=r=>PDP.u==='cm'?String(r).split('–').map(x=>Math.round(+x*2.54)).join('–'):r;
  const SZ=p.sizes?SIZES.filter(z=>p.sizes.includes(z.s)):SIZES.filter(z=>+z.s<=46);
  const catHash=p.cat==='Sarees'?'sarees':p.cat==='Kurtas'?'kurtas':'kurta-sets';
  return `<div class="wrap"><div class="crumbs" style="padding-top:26px"><a href="#">Home</a> / <a href="#shop-${catHash}">${p.cat}</a> / ${esc(p.n)}</div>
@@ -376,24 +399,28 @@ function pagePDP(code){
    <div class="price">${price(p.inr)}<small>${note}</small></div>
    <p style="color:var(--ink2);margin-top:18px;font-size:16.5px">${esc(p.d)}</p>
    <div class="opt"><div class="lab"><span>Colour: <b>${esc(PDP.col)}</b></span><span class="small">${p.cols.length} colours</span></div>
-    <div class="swatches">${p.cols.map(c=>`<button class="swatch ${PDP.col===c?'on':''}" style="background:${col(c)}" data-act="col" data-v="${esc(c)}" aria-label="${esc(c)}" aria-pressed="${PDP.col===c}">${(p.ph||{})[c]?'<i class="cam"></i>':''}</button>`).join('')}</div>${p.ph&&p.cols.length>Object.keys(p.ph).length?'<p class="small" style="margin:10px 0 0">Colours with a gold dot have photographs. Others are shown as colour cards.</p>':''}</div>
+    <div class="swatches">${p.cols.map(c=>`<button class="swatch ${PDP.col===c?'on':''}" style="background:${col(c)}" data-act="col" data-v="${esc(c)}" aria-label="${esc(c)}" aria-pressed="${PDP.col===c}"></button>`).join('')}</div>${stand?`<p class="small" style="margin:10px 0 0">We haven't photographed ${esc(PDP.col)} yet. Ask us on WhatsApp for a picture of the fabric.</p>`:''}</div>
    ${isSaree?`<div class="opt"><div class="lab"><span>Size: <b>Free size</b></span></div><p class="small">Saree length and blouse details are confirmed with you on WhatsApp.</p></div>`:
-   `<div class="opt"><div class="lab"><span>Size${PDP.size?`: <b>${PDP.size} (${SIZES.find(z=>z.s===PDP.size).l})</b>`:''}</span><button class="textlink" data-act="openfit" style="font-size:14px">${rec?`Your size is ${rec}`:'Find my size'}</button></div>
+   `<div class="opt"><div class="lab"><span>Size${PDP.size?`: <b>${PDP.size} (${SIZES.find(z=>z.s===PDP.size).l})</b>`:''}</span><span style="display:flex;gap:18px"><button class="textlink" data-act="sizeguide" style="font-size:14px">Size guide</button><button class="textlink" data-act="openfit" style="font-size:14px">${rec?`Your size is ${rec}`:'Find my size'}</button></span></div>
     <div class="sizes" role="group" aria-label="Size" style="grid-template-columns:repeat(${Math.min(SZ.length,7)},1fr)">${SZ.map(z=>`<button class="size ${PDP.size===z.s?'on':''} ${rec===z.s&&PDP.size!==z.s?'rec':''}" data-act="size" data-v="${z.s}" aria-pressed="${PDP.size===z.s}">${z.s}<small>${z.l}</small></button>`).join('')}</div>
     <div class="hint" id="sizehint">${rec&&!PDP.size?(SZ.some(z=>z.s===rec)?'Your fit-finder size has a gold outline.':`Your fit-finder size (${rec}) isn't offered in this piece. Message us and we'll advise.`):''}</div></div>`}
    <div class="opt" style="display:flex;align-items:center;gap:18px"><span style="font-size:14px">Quantity</span><div class="qty"><button data-act="q-" aria-label="Decrease quantity">−</button><span aria-live="polite">${PDP.q}</span><button data-act="q+" aria-label="Increase quantity">+</button></div></div>
-   <div class="actions"><button class="btn wide" data-act="add">Add to request bag</button>
-    <a class="btn ghost wide" target="_blank" rel="noopener" href="${wa(`Hi Vidisha Ethnics, I'd like to know more about ${p.c} ${p.n} in ${PDP.col}.`)}">Ask about this on WhatsApp</a></div>
+   <div class="actions"><button class="btn wide" data-act="add">Add to bag</button>
+    <a class="btn ghost wide" target="_blank" rel="noopener" href="${wa(`Hi Vidisha Ethnics, I'd like to know more about ${p.c} ${p.n} in ${PDP.col}.\n${shareUrl(p.c)}`)}">Ask about this on WhatsApp</a>
+    <button type="button" class="textlink sharebtn" data-act="share" data-v="${p.c}">Share this piece</button></div>
    <div class="assure"><div><b>Made to order</b>Ready in ${C.leadTime}</div><div><b>Size exchange</b>If it doesn't fit, we exchange it</div><div><b>No payment now</b>We confirm with you first</div></div>
    <details class="acc" open><summary>What's included</summary><div class="bd">${esc(p.inc)}.${!isSaree&&!/slip/i.test(p.inc)&&/chanderi|kota|mul|muslin|tissue/i.test(p.fab)?' A matching cotton slip can be added for ₹350.':''}</div></details>
    <details class="acc"><summary>Fabric and care</summary><div class="bd"><p><b>Fabric:</b> ${esc(p.fab)}</p><p style="margin:0">${care}</p></div></details>
    ${p.craft==='Chikankari'?`<details class="acc"><summary>The craft: chikankari</summary><div class="bd"><p>Hand embroidery from Lucknow, worked on a hoop one stitch at a time. Small irregularities are the mark of a hand, not a flaw.</p><a class="link" href="#craft">How a piece is made</a></div></details>`:''}
-   <details class="acc"><summary>Sizing and fit</summary><div class="bd">Available in sizes ${SZ[0].s} to ${SZ[SZ.length-1].s} (${SZ[0].l} to ${SZ[SZ.length-1].l}), based on body measurements. Every piece is made for you, so we also note your measurements with your request. <button class="textlink" data-act="openfit">Use the fit finder</button></div></details>
+   ${isSaree?'':`<details class="acc" id="sizeacc"><summary>Size guide</summary><div class="bd"><p>Body measurements. Every piece is made for you, so we also note your own measurements with your request.</p>
+   <div class="seg" role="group" aria-label="Units" style="margin-bottom:12px"><button type="button" data-act="szu" data-v="in" class="${PDP.u!=='cm'?'on':''}">Inches</button><button type="button" data-act="szu" data-v="cm" class="${PDP.u==='cm'?'on':''}">cm</button></div>
+   <table class="tbl sz"><thead><tr><th>Size</th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead><tbody>${SZ.map(z=>`<tr class="${PDP.size===z.s?'hl':''}"><td><b>${z.s}</b> ${z.l}</td><td>${cvt(z.b)}</td><td>${cvt(z.w)}</td><td>${cvt(z.h)}</td></tr>`).join('')}</tbody></table>
+   <p class="small" style="margin:12px 0 0">Between two sizes? Choose the larger one, or <button class="textlink" data-act="openfit">use the fit finder</button>.</p></div></details>`}
    <details class="acc"><summary>Shipping and exchange</summary><div class="bd">Made to order in ${C.leadTime}, then shipped with tracking to India, the USA, the UK, Sri Lanka, Malaysia and the UAE. We exchange for size; message us within 7 days of delivery. <a class="link" href="#shipping">Details</a></div></details>
   </div>
  </div>
- ${!isSaree?`<section style="padding:48px 0 24px;border-top:1px solid var(--line)"><div class="sechead"><div><h2>On three body types</h2><p>Illustrated in the colour you've chosen, to help you picture the length and fall.</p></div></div>
-  <div class="trio">${[['petite','Petite',"5'1\", size 36"],['regular','Regular',"5'5\", size 40"],['curvy','Curvy',"5'6\", size 44"]].map(([b,l,m])=>`<figure>${figure(p,PDP.col,{body:b})}<figcaption><b>${l}</b>${m}</figcaption></figure>`).join('')}</div></section>`:''}
+ ${!isSaree?`<details class="trioacc"${PDP.trio?' open':''}><summary><span>See how it falls on three body types</span><small>Drawn in ${esc(PDP.col)}, to help you picture the length</small></summary>
+  <div class="trio">${[['petite','Petite',"5'1\", size 36"],['regular','Regular',"5'5\", size 40"],['curvy','Curvy',"5'6\", size 44"]].map(([b,l,m])=>`<figure>${figure(p,PDP.col,{body:b})}<figcaption><b>${l}</b>${m}</figcaption></figure>`).join('')}</div></details>`:''}
  ${related.length?`<section class="sec" style="padding-top:72px"><div class="sechead"><div><h2>You may also like</h2></div></div><div class="grid">${related.map(tile).join('')}</div></section>`:''}
  </div>`;
 }
@@ -427,6 +454,8 @@ function pageFit(){
 const bagTotal=(cc=S.country)=>S.bag.reduce((a,it)=>{const p=prod(it.c);return a+(p&&priced(p.inr)?amount(p.inr,cc)*it.q:0)},0);
 const bagOnRequest=()=>S.bag.some(it=>{const p=prod(it.c);return p&&!priced(p.inr)});
 const totalLabel=(v,onreq,cc)=>v?money(v,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp';
+function sumRows(items,cc,g){const k=cty(cc);let sub=0,onreq=false;items.forEach(it=>{const p=prod(it.c);if(p&&priced(p.inr))sub+=amount(p.inr,cc,g)*it.q;else if(p)onreq=true});const sh=shipAmount(items,cc);
+ return `<div class="sumrow"><span>Pieces</span><span>${sub?money(sub,cc)+(onreq?' +':''):'On request'}</span></div><div class="sumrow"><span>Shipping${k.code==='IN'?'':' by India Post Speed Post'}</span><span>${k.code==='IN'?'Free':'about '+money(sh,cc)}</span></div><div class="tot"><span>Estimated total</span><b>${sub?money(sub+sh,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp'}</b></div>`}
 function bagLine(it,i){
  const p=prod(it.c);if(!p)return '';
  return `<div class="line"><a class="th" href="#p-${p.c}">${thumb(p,it.col)}</a><div><a href="#p-${p.c}" style="text-decoration:none;font-family:var(--serif);font-size:22px">${esc(p.n)}</a><div class="small">${p.c}, ${esc(it.col)}, size ${it.size==='Free'?'free':it.size}</div>
@@ -434,18 +463,18 @@ function bagLine(it,i){
  <div>${priced(p.inr)?price(p.inr*it.q):'On request'}</div></div>`;
 }
 function pageBag(){
- if(!S.bag.length)return `<div class="wrap pagehead"><h1>Your request bag</h1></div><div class="wrap empty"><p>Your bag is empty. Add the pieces you'd like us to make for you.</p><a class="btn" href="#shop">Explore the collection</a></div>`;
+ if(!S.bag.length)return `<div class="wrap pagehead"><h1>Your bag</h1></div><div class="wrap empty"><p>Your bag is empty. Add the pieces you'd like us to make for you.</p><a class="btn" href="#shop">Explore the collection</a></div>`;
  const k=cty();
- return `<div class="wrap pagehead"><h1>Your request bag</h1><p>Review your pieces, then send us a request. Nothing is charged on the website.</p></div>
+ return `<div class="wrap pagehead"><h1>Your bag</h1><p>Review your pieces, then send us a request. Nothing is charged on the website.</p></div>
  <div class="wrap two"><div>${S.bag.map(bagLine).join('')}</div>
- <aside class="summary"><h2 style="font-size:30px">Summary</h2><p class="small" style="margin:6px 0 0">Delivering to ${k.name}</p><div class="tot"><span>Estimated total</span><b>${totalLabel(bagTotal(),bagOnRequest())}</b></div>
- <p class="small">${k.code==='IN'?'Free shipping within India.':'Shipping to '+k.name+' is quoted on WhatsApp before you pay.'} We confirm the final amount with you first.</p>
+ <aside class="summary"><h2 style="font-size:30px">Summary</h2><p class="small" style="margin:6px 0 0">Delivering to ${k.name}</p>${sumRows(S.bag,S.country,S.geo)}
+ <p class="small">${k.code==='IN'?'Free shipping within India.':'Shipping is the India Post Speed Post rate to '+k.name+' for the weight of your pieces, with tracking.'} We confirm the final amount with you on WhatsApp before you pay.</p>
  <a class="btn wide" href="#request">Continue to your request</a><a class="link" href="#shop" style="display:inline-block;margin-top:16px">Keep browsing</a></aside></div>`;
 }
 function pageRequest(){
  if(!S.bag.length)return pageBag();
  const f=S.fit||{}, u=f.unit||'in', k=cty();
- return `<div class="wrap pagehead"><div class="crumbs"><a href="#bag">Request bag</a> / Your request</div><h1>Send your order request</h1><p>We'll message you on WhatsApp to confirm the details and share how to pay. Nothing is charged here.</p></div>
+ return `<div class="wrap pagehead"><div class="crumbs"><a href="#bag">Your bag</a> / Your request</div><h1>Send your order request</h1><p>We'll message you on WhatsApp to confirm the details and share how to pay. Nothing is charged here.</p></div>
  <div class="wrap two"><form class="form" data-form="req" novalidate>
   <fieldset class="fs"><legend>Your details</legend><div class="form">
    <label class="f"><span class="req">Full name</span><input class="t" name="name" autocomplete="name"></label>
@@ -468,13 +497,14 @@ function pageRequest(){
  </form>
  <aside class="summary"><h2 style="font-size:30px;margin-bottom:6px">Your request</h2>
  ${S.bag.map(it=>{const p=prod(it.c);return `<div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px"><span>${esc(p.n)}<br><span class="small">${esc(it.col)}, size ${it.size==='Free'?'free':it.size}, qty ${it.q}</span></span><span>${priced(p.inr)?price(p.inr*it.q):'On request'}</span></div>`}).join('')}
- <div class="tot"><span>Estimated total</span><b>${totalLabel(bagTotal(),bagOnRequest())}</b></div><p class="small" style="margin:0">Made to order: ready ${C.leadTime} after payment is confirmed.</p></aside></div>`;
+ ${sumRows(S.bag,S.country,S.geo)}<p class="small" style="margin:0">Made to order: ready ${C.leadTime} after payment is confirmed.</p></aside></div>`;
 }
-function orderTotal(o){return o.items.reduce((a,it)=>{const p=prod(it.c);return a+(p&&priced(p.inr)?amount(p.inr,o.cc)*it.q:0)},0)}
+function orderTotal(o,withShip=true){const sub=o.items.reduce((a,it)=>{const p=prod(it.c);return a+(p&&priced(p.inr)?amount(p.inr,o.cc,o.geo||'IN')*it.q:0)},0);return sub&&withShip?sub+shipAmount(o.items,o.cc):sub}
+const shipLine=o=>o.cc==='IN'?'Shipping: free within India':`Shipping by India Post Speed Post: about ${money(shipAmount(o.items,o.cc),o.cc)} (included above)`;
 const orderOnReq=o=>o.items.some(it=>{const p=prod(it.c);return p&&!priced(p.inr)});
 function custMsg(o){
  const lines=o.items.map((it,i)=>{const p=prod(it.c);return `${i+1}. ${it.c} ${p?p.n:''}, ${it.col}, size ${it.size}, qty ${it.q}`}).join('\n');const m=o.m;
- return `Hi Vidisha Ethnics, I've sent order request ${o.id}.\n\n${lines}\n\nEstimated total: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}\nMeasurements (${m.unit}): bust ${m.bust}, waist ${m.waist}, hip ${m.hip}${m.shoulder?', shoulder '+m.shoulder:''}${m.height?', height '+m.height:''}\n\n${o.name}, ${o.city}, ${o.country}\nPlease share the payment details.`;
+ return `Hi Vidisha Ethnics, I've sent order request ${o.id}.\n\n${lines}\n\nEstimated total: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}\n${shipLine(o)}\nMeasurements (${m.unit}): bust ${m.bust}, waist ${m.waist}, hip ${m.hip}${m.shoulder?', shoulder '+m.shoulder:''}${m.height?', height '+m.height:''}\n\n${o.name}, ${o.city}, ${o.country}\nPlease share the payment details.`;
 }
 function pageDone(id){
  const o=S.orders.find(x=>x.id===id);
@@ -482,7 +512,7 @@ function pageDone(id){
  return `<div class="done"><img src="assets/logo/medallion.png" alt="" style="width:64px;margin:0 auto 24px"><h1>Thank you, ${esc(o.name.split(' ')[0])}. Your request is in.</h1>
  <div class="id">Request ${o.id}</div><p style="color:var(--ink2)">${!LIVE?'<b>One last step:</b> tap below to send your request to us on WhatsApp, so we receive it.':o.offline?'We couldn\'t reach our order desk just now, so please send your request on WhatsApp.':'Our team has your request. To speed things up, you can also send it on WhatsApp now.'}</p>
  <a class="btn" target="_blank" rel="noopener" href="${wa(custMsg(o))}">Send my order on WhatsApp</a>
- <div class="next"><div><span class="n">1</span><span><b>We confirm the details,</b> usually within one working day, on WhatsApp at ${esc(o.wa)}.</span></div><div><span class="n">2</span><span><b>You pay as agreed.</b> We share the final amount${o.cc!=='IN'?', including shipping to '+esc(o.country)+',':''} and payment options before you pay.</span></div><div><span class="n">3</span><span><b>We make and ship your piece</b> within ${C.leadTime} of payment, with tracking.</span></div></div>
+ <div class="next"><div><span class="n">1</span><span><b>We confirm the details,</b> usually within one working day, on WhatsApp at ${esc(o.wa)}.</span></div><div><span class="n">2</span><span><b>You pay as agreed.</b> We share the final amount${o.cc!=='IN'?', including India Post shipping to '+esc(o.country)+',':''} and payment options before you pay.</span></div><div><span class="n">3</span><span><b>We make and ship your piece</b> within ${C.leadTime} of payment, with tracking.</span></div></div>
  <a class="link" href="#shop">Continue browsing</a></div>`;
 }
 function pageWish(){
@@ -512,9 +542,9 @@ function pageCraft(){
 
 function pageStory(){
  return `<section class="wrap story-hero">
-  <div>${ornament()}<h1>From local artisans to your wardrobe</h1>
-  <p>Vidisha Ethnics began in Bengaluru in March 2025 with a simple idea. Clothing made by hand should reach the person who wears it directly, with the care and the craft still in it.</p></div>
-  <figure><div class="archimg"><img src="${IMG('artisan-2')}" alt="An artisan's hands at work on a chikankari motif" fetchpriority="high"></div></figure>
+  <div>${ornament()}<h1>Started at home in Bengaluru, stitched by hand in Lucknow</h1>
+  <p>Vidisha Chaurasia began Vidisha Ethnics in March 2025 with a simple idea. Clothing made by hand should reach the person who wears it directly, with the care and the craft still in it.</p></div>
+  ${FOUNDER(true,false)}
  </section>
 
  <section class="sec" style="background:var(--cream);padding:96px 0"><div class="wrap"><p class="statement">Every kurta we send out has spent days on an artisan's hoop. We want you to feel that the first time you wear it.</p></div></section>
@@ -569,8 +599,9 @@ function pageStory(){
 function pageShipping(){
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Shipping and exchanges</div><h1>Shipping and exchanges</h1><p>Every piece is made to order and shipped with tracking.</p></div>
  <div class="prose" style="max-width:960px">
-  <table class="tbl"><thead><tr><th>Country</th><th>Prices shown in</th><th>Shipping</th></tr></thead><tbody>
-  ${C.countries.map(k=>`<tr><td>${k.name}</td><td>${k.currency}</td><td>${k.code==='IN'?'Free':'Quoted on WhatsApp before you pay'}</td></tr>`).join('')}</tbody></table>
+  <table class="tbl"><thead><tr><th>Country</th><th>Prices shown in</th><th>Shipping, one kurta set</th></tr></thead><tbody>
+  ${C.countries.map(k=>`<tr><td>${k.name}</td><td>${k.currency}</td><td>${k.code==='IN'?'Free':'about '+money(shipAmount([{c:'W020',q:1}],k.code),k.code)}</td></tr>`).join('')}</tbody></table>
+  <p class="small">Overseas parcels go by India Post International Speed Post, with tracking. The shipping charge is India Post's rate for the weight of your parcel, plus GST, and it is added to your estimated total before you send a request. Prices for clients outside India are set separately from prices in India.</p>
   <h2>How long it takes</h2><p>We make your piece in ${C.leadTime} after payment is confirmed, then dispatch it with tracking. Delivery time after dispatch depends on your city and country; we'll share the tracking link on WhatsApp.</p>
   <h2>Paying</h2><p>There is no payment on the website. Once we've confirmed your request on WhatsApp, we share the final amount and payment options for your country.</p>
   <h2>Exchanges</h2><p>We exchange for size. Message us on WhatsApp within 7 days of delivery with your request number. The piece should be unworn, with its tags.</p>
@@ -579,7 +610,7 @@ function pageShipping(){
  </div>`;
 }
 function pageHelp(){
- const qa=[['How do I order?','Add pieces to your request bag and send a request with your measurements. We message you on WhatsApp to confirm, share the final amount and how to pay. Once payment is received, we start making your piece.'],['Do you deliver outside India?','Yes. We deliver to the USA, the UK, Sri Lanka, Malaysia and the UAE. Choose your country at the top of the page to see prices in your currency.'],['How long does it take?','Every piece is made to order, in '+C.leadTime+' after payment. Need it by a date? Add it to your request and we will tell you whether it is possible.'],['Can I change a colour or length?','Often, yes. Most pieces can be made in other colours, and we can adjust length. Mention it in your request notes.'],['Can I exchange?','We exchange for size within 7 days of delivery. The piece should be unworn, with tags.'],['How do I care for chikankari?','Hand wash cotton and mul gently in cold water, or dry clean chanderi, kota doria and festive pieces. Each product page lists its own care.'],['Why are some pieces shown as fabric cards?','Those pieces haven\'t been photographed yet. The card shows their real colour and the type of work. Photographs are being added.']];
+ const qa=[['How do I order?','Add pieces to your bag and send a request with your measurements. We message you on WhatsApp to confirm, share the final amount and how to pay. Once payment is received, we start making your piece.'],['Do you deliver outside India?','Yes. We deliver to the USA, the UK, Sri Lanka, Malaysia and the UAE. Choose your country at the top of the page to see prices in your currency. Shipping is by India Post Speed Post and is shown in your total before you send a request.'],['How long does it take?','Every piece is made to order, in '+C.leadTime+' after payment. Need it by a date? Add it to your request and we will tell you whether it is possible.'],['Can I change a colour or length?','Often, yes. Most pieces can be made in other colours, and we can adjust length. Mention it in your request notes.'],['Can I exchange?','We exchange for size within 7 days of delivery. The piece should be unworn, with tags.'],['How do I care for chikankari?','Hand wash cotton and mul gently in cold water, or dry clean chanderi, kota doria and festive pieces. Each product page lists its own care.'],['Why is a colour shown in another colour\'s photo?','We haven\'t photographed every colour yet. The photo shows the cut and the work, and your piece is made in the colour you choose. Ask us on WhatsApp for a picture of the fabric.']];
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Questions</div><h1>Questions</h1></div>
  <div class="prose">${qa.map(([q,a],i)=>`<details class="acc" ${i===0?'open':''}><summary>${q}</summary><div class="bd">${a}</div></details>`).join('')}
  <p style="margin-top:36px"><a class="btn ghost" target="_blank" rel="noopener" href="${wa('Hi Vidisha Ethnics, I have a question.')}">Ask us on WhatsApp</a></p></div>`;
@@ -596,7 +627,7 @@ function pagePrivacy(){
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Privacy</div><h1>Privacy</h1></div>
  <div class="prose"><p>When you send an order request, we collect your name, WhatsApp number, optional email, city, country and body measurements. We use them only to make, confirm and deliver your order and to contact you about it.</p>
  <p>Your details are stored in our private order sheet, which only the Vidisha Ethnics team can open. We never sell or share them, and we never show your measurements publicly.</p>
- <p>Your request bag, wishlist and fit-finder results are saved in your own browser so you don't lose them.</p>
+ <p>Your bag, wishlist and fit-finder results are saved in your own browser so you don't lose them.</p>
  <p>To see, correct or delete your details, message us on WhatsApp or write to ${esc(C.email)}.</p></div>`;
 }
 
@@ -607,7 +638,7 @@ async function api(action,payload,method='POST'){
  const r=await fetch(C.appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},payload))});return r.json();
 }
 const adminOrders=()=>S.admin.live||S.orders;
-function adminMsg(o){const first=o.name.replace(/^Sample: /,'').split(' ')[0];return `Hi ${first}, thank you for your order request ${o.id} with Vidisha Ethnics.\n\nTotal: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}${o.cc!=='IN'?' plus shipping to '+o.country+' (we will confirm)':''}.\nOnce we receive payment we'll start making your piece. It will be ready in ${C.leadTime}.`}
+function adminMsg(o){const first=o.name.replace(/^Sample: /,'').split(' ')[0];return `Hi ${first}, thank you for your order request ${o.id} with Vidisha Ethnics.\n\nTotal: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}\n${shipLine(o)}.\nOnce we receive payment we'll start making your piece. It will be ready in ${C.leadTime}.`}
 function pageAdmin(){
  const A=S.admin;
  if(!A.auth)return `<div class="admin"><div class="pin"><img src="${LOGO}" alt="Vidisha Ethnics"><h1 style="font-size:32px;margin-bottom:6px">Admin</h1><p class="small">${LIVE?'Enter your admin key.':'Preview mode. PIN: 2025'}</p><form data-form="pin" class="form" style="margin-top:16px"><input class="t" name="pin" type="password" aria-label="${LIVE?'Admin key':'PIN'}" placeholder="${LIVE?'Admin key':'PIN'}" style="text-align:center"><div class="err" id="pinerr" role="alert"></div><button class="btn" type="submit">Sign in</button></form><a class="link" href="#" style="display:inline-block;margin-top:18px;font-size:14px">Back to the shop</a></div></div>`;
@@ -660,7 +691,7 @@ function route(){
  else if(h==='shop-new'){html=pageShop({cat:'New'});active='shop';title='New this season'}
  else if(h.startsWith('p-')){html=pagePDP(h.slice(2));const p=prod(h.slice(2));title=p?p.n:''}
  else if(h==='fit')html=pageFit(),title='Find my size';
- else if(h==='bag')html=pageBag(),title='Request bag';
+ else if(h==='bag')html=pageBag(),title='Your bag';
  else if(h==='request')html=pageRequest(),title='Order request';
  else if(h.startsWith('done-'))html=pageDone(h.slice(5)),title='Request received';
  else if(h==='wishlist')html=pageWish(),title='Wishlist';
@@ -688,6 +719,23 @@ function closeDrawer(){const d=$('#drawer');d.classList.remove('on');d.setAttrib
 $('#scrim').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#drawer').classList.contains('on'))closeDrawer()});
 
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('trioacc'))PDP.trio=e.target.open},true);
+/* ---------- photo viewer ---------- */
+function openZoom(src){
+ let lb=$('#lb');
+ if(!lb){lb=document.createElement('div');lb.id='lb';lb.setAttribute('role','dialog');lb.setAttribute('aria-modal','true');lb.setAttribute('aria-label','Photo');
+  lb.innerHTML='<button type="button" class="lbx" aria-label="Close">×</button><div class="lbin"><img alt=""></div><p class="lbh">Tap the photo to zoom in</p>';document.body.appendChild(lb);
+  const im=lb.querySelector('img'),inn=lb.querySelector('.lbin');
+  const close=()=>{lb.classList.remove('on');im.classList.remove('z');document.body.style.overflow=''};
+  lb.querySelector('.lbx').addEventListener('click',close);
+  lb.addEventListener('click',e=>{if(e.target===lb||e.target===inn)close()});
+  im.addEventListener('click',e=>{const r=im.getBoundingClientRect();im.style.transformOrigin=`${(e.clientX-r.left)/r.width*100}% ${(e.clientY-r.top)/r.height*100}%`;im.classList.toggle('z')});
+  im.addEventListener('mousemove',e=>{if(!im.classList.contains('z'))return;const r=im.getBoundingClientRect();im.style.transformOrigin=`${(e.clientX-r.left)/r.width*100}% ${(e.clientY-r.top)/r.height*100}%`});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lb.classList.contains('on'))close()});
+ }
+ lb.querySelector('img').src=src;lb.classList.add('on');document.body.style.overflow='hidden';lb.querySelector('.lbx').focus();
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',e=>{
  const t=e.target.closest('[data-act]');if(!t)return;
@@ -696,6 +744,11 @@ document.addEventListener('click',e=>{
  if(a==='close-nav'){closeDrawer();return}
  if(t.tagName==='A'&&a!=='shopcraft'&&a!=='pickcol')return;
  switch(a){
+  case 'share':{const p=prod(v);const u=shareUrl(v);if(navigator.share){navigator.share({title:p.n+' | Vidisha Ethnics',url:u}).catch(()=>{})}else{try{navigator.clipboard.writeText(u).then(()=>toast('Link copied'),()=>toast(u))}catch(e){toast(u)}}break}
+  case 'zoom':{openZoom(v);break}
+  case 'sizeguide':{const d=$('#sizeacc');if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}break}
+  case 'szu':{PDP.u=v;rerender();const d=$('#sizeacc');if(d)d.open=true;break}
+  case 'snd':{const vd=t.parentElement.querySelector('video');if(!vd)break;const on=vd.muted;vd.muted=!on;if(on){vd.currentTime=0;vd.play().catch(()=>{})}t.textContent=on?'Mute':'Play with sound';t.setAttribute('aria-pressed',on);break}
   case 'menu':{const m=$('#mnav');m.classList.toggle('on');t.setAttribute('aria-expanded',m.classList.contains('on'));break}
   case 'wish':{const c=t.dataset.c,i=S.wish.indexOf(c);if(i>=0){S.wish.splice(i,1);toast('Removed from your wishlist')}else{S.wish.push(c);toast('Saved to your wishlist')}save();rerender();break}
   case 'ftoggle':$('#filters').classList.toggle('on');break;
@@ -728,8 +781,8 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',async e=>{
  const t=e.target,a=t.dataset.act;if(!a)return;
- if(a==='country'){S.country=t.value;save();rerender();toast(`Showing prices for ${cty().name}`)}
- if(a==='reqcountry'){S.country=t.value;save();const form=t.closest('form');const keep=Object.fromEntries(new FormData(form).entries());rerender();const f2=document.querySelector('form[data-form=req]');if(f2)Object.entries(keep).forEach(([k,v])=>{const el=f2.elements[k];if(el&&el.type!=='checkbox'&&k!=='country')el.value=v})}
+ if(a==='country'){S.country=t.value;store.set('picked',1);save();rerender();toast(`Showing prices for ${cty().name}`)}
+ if(a==='reqcountry'){S.country=t.value;store.set('picked',1);save();const form=t.closest('form');const keep=Object.fromEntries(new FormData(form).entries());rerender();const f2=document.querySelector('form[data-form=req]');if(f2)Object.entries(keep).forEach(([k,v])=>{const el=f2.elements[k];if(el&&el.type!=='checkbox'&&k!=='country')el.value=v})}
  if(a==='fcat'){S.f.cat=t.value;rerender()}
  if(a==='fcraft'){const c=t.value;S.f.crafts=t.checked?[...S.f.crafts,c]:S.f.crafts.filter(x=>x!==c);rerender()}
  if(a==='ffab'){const c=t.value;S.f.fabs=t.checked?[...S.f.fabs,c]:S.f.fabs.filter(x=>x!==c);rerender()}
@@ -766,7 +819,7 @@ document.addEventListener('submit',async e=>{
   if(miss.length){err.textContent='Please add '+miss.join(', ')+'.';err.scrollIntoView({block:'center',behavior:'smooth'});return}
   const d=new Date();const id='VE-'+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(Math.floor(100+Math.random()*900));
   const k2=cty(fd.country);
-  const o={id,date:d.toISOString(),name:fd.name.trim(),wa:fd.wa.trim(),email:fd.email.trim(),city:fd.city.trim(),country:k2.name,cc:k2.code,items:S.bag.map(x=>Object.assign({},x)),m:{unit:fd.unit,bust:fd.bust,waist:fd.waist,hip:fd.hip,shoulder:fd.shoulder,height:fd.height,length:fd.length},by:fd.by,notes:fd.notes.trim(),consent:!!fd.ok,status:'New'};
+  const o={id,date:d.toISOString(),name:fd.name.trim(),wa:fd.wa.trim(),email:fd.email.trim(),city:fd.city.trim(),country:k2.name,cc:k2.code,geo:S.geo,items:S.bag.map(x=>Object.assign({},x)),m:{unit:fd.unit,bust:fd.bust,waist:fd.waist,hip:fd.hip,shoulder:fd.shoulder,height:fd.height,length:fd.length},by:fd.by,notes:fd.notes.trim(),consent:!!fd.ok,status:'New'};
   o.total=orderTotal(o);o.currency=k2.currency;
   o.lines=o.items.map(it=>{const p=prod(it.c);return {code:it.c,name:p?p.n:'',colour:it.col,size:it.size,qty:it.q,unit:p?amount(p.inr,o.cc):null}});o.onRequest=orderOnReq(o);
   const btn=$('#sendbtn');btn.disabled=true;btn.textContent='Sending…';
@@ -781,8 +834,17 @@ document.addEventListener('submit',async e=>{
 });
 
 /* ---------- boot ---------- */
+async function geoLookup(){
+ const tries=[['https://get.geojs.io/v1/ip/country.json',j=>j.country],['https://ipapi.co/json/',j=>j.country_code]];
+ for(const [u,pick] of tries){try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),3500);const r=await fetch(u,{signal:ctl.signal});clearTimeout(tm);if(r.ok){const c=pick(await r.json());if(c&&/^[A-Z]{2}$/.test(c))return c}}catch(e){}}
+ return null;
+}
 async function boot(){
  route();
+ const cached=store.get('geo',null);
+ geoLookup().then(g=>{if(!g)return;store.set('geo',g);const changed=g!==S.geo;S.geo=g;
+  if(!store.get('picked',0)){const d=defaultCountry(g);if(d!==S.country){S.country=d;save();rerender();return}}
+  if(changed)rerender()});
  if(LIVE){try{const r=await api('catalog',{},'GET');if(r&&r.ok&&r.overrides){S.over=r.overrides;rerender()}}catch(e){}}
 }
 boot();
