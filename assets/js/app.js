@@ -833,6 +833,45 @@ document.addEventListener('submit',async e=>{
  }
 });
 
+/* ---------- WhatsApp help ---------- */
+function helpCtx(){const h=decodeURIComponent(location.hash.slice(1));if(h.startsWith('p-')){const p=prod(PDP.c);if(p&&!p.hidden)return p}return null}
+function helpItems(){
+ const p=helpCtx(), k=cty(), place=k.code==='IN'?'my city in India':k.name;
+ const about=p?` ${p.c}, ${p.n}${PDP.col?' in '+PDP.col:''}`:'';
+ const link=p?`\n${shareUrl(p.c)}`:'';
+ const last=(S.orders||[]).filter(o=>!o.sample).slice(-1)[0];
+ const items=[];
+ items.push(['size','Help me choose my size',`Hi Vidisha Ethnics, could you help me choose my size${p?' for'+about:''}?\nMy bust, waist and hip in inches are: ${link}`]);
+ if(p&&p.cols.length>1)items.push(['colour','Can I get this in another colour?',`Hi Vidisha Ethnics, I'm looking at${about}. Can I see it in another colour? I'd like: ${link}`]);
+ if(p&&!priced(p.inr))items.push(['price','What is the price of this piece?',`Hi Vidisha Ethnics, could you share the price of${about} for delivery to ${k.name}?${link}`]);
+ if(p&&p.ph&&!(p.ph[PDP.col]))items.push(['photo','Send me a photo of this colour',`Hi Vidisha Ethnics, could you send a photo of${about}? It isn't on the website yet.${link}`]);
+ items.push(['ship',`Delivery time to ${k.code==='IN'?'my city':k.name}`,`Hi Vidisha Ethnics, how long would delivery to ${place} take${p?' for'+about:''}? I'd like it by: ${link}`]);
+ items.push(['order',last?`About my request ${last.id}`:'A question about my order',last?`Hi Vidisha Ethnics, I have a question about my order request ${last.id}: `:'Hi Vidisha Ethnics, I have a question about my order: ']);
+ items.push(['other','Something else',`Hi Vidisha Ethnics, ${p?"I'm looking at"+about+'. ':''}`]);
+ return items;
+}
+function helpRender(){
+ const box=$('#help .hbody');if(!box)return;const p=helpCtx();
+ box.innerHTML=`<p class="hhead">Ask us on WhatsApp</p><p class="hsub">${p?`About ${esc(p.n)}${PDP.col?', '+esc(PDP.col):''}. `:''}Pick a question and we'll reply to you personally.</p>
+ <ul>${helpItems().map(([id,label])=>`<li><button type="button" data-help="${id}">${esc(label)}</button></li>`).join('')}</ul>
+ <p class="hfoot">Opens WhatsApp with your message ready to send to +91 87229 49275.</p>`;
+}
+function helpInit(){
+ if($('#help'))return;
+ const el=document.createElement('div');el.id='help';
+ el.innerHTML=`<div class="hpanel" id="helppanel" role="dialog" aria-label="Ask us on WhatsApp" hidden><button type="button" class="hx" aria-label="Close">×</button><div class="hbody"></div></div>
+ <button type="button" class="hbtn" aria-expanded="false" aria-controls="helppanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4v-14z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Need help?</span></button>`;
+ document.body.appendChild(el);
+ const btn=el.querySelector('.hbtn'),panel=el.querySelector('.hpanel');
+ const close=()=>{panel.hidden=true;btn.setAttribute('aria-expanded','false');el.classList.remove('open')};
+ btn.addEventListener('click',()=>{if(!panel.hidden){close();return}helpRender();panel.hidden=false;el.classList.add('open');btn.setAttribute('aria-expanded','true');const f=panel.querySelector('[data-help]');if(f)f.focus()});
+ el.querySelector('.hx').addEventListener('click',()=>{close();btn.focus()});
+ panel.addEventListener('click',e=>{const b=e.target.closest('[data-help]');if(!b)return;const it=helpItems().find(x=>x[0]===b.dataset.help);if(!it)return;window.open(wa(it[2]),'_blank','noopener');close()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){close();btn.focus()}});
+ document.addEventListener('click',e=>{if(!panel.hidden&&!el.contains(e.target))close()});
+}
+function helpSync(){const el=$('#help');if(!el)return;const h=location.hash.slice(1);el.classList.toggle('gone',h==='admin'||h.startsWith('done-'));const panel=el.querySelector('.hpanel');if(panel&&!panel.hidden)helpRender()}
+
 /* ---------- boot ---------- */
 async function geoLookup(){
  const tries=[['https://get.geojs.io/v1/ip/country.json',j=>j.country],['https://ipapi.co/json/',j=>j.country_code]];
@@ -840,7 +879,7 @@ async function geoLookup(){
  return null;
 }
 async function boot(){
- route();
+ route();helpInit();helpSync();window.addEventListener('hashchange',()=>setTimeout(helpSync,0));
  const cached=store.get('geo',null);
  geoLookup().then(g=>{if(!g)return;store.set('geo',g);const changed=g!==S.geo;S.geo=g;
   if(!store.get('picked',0)){const d=defaultCountry(g);if(d!==S.country){S.country=d;save();rerender();return}}

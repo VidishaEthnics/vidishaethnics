@@ -478,3 +478,25 @@ input.t:focus,select.t:focus,textarea.t:focus{border-color:var(--ink);outline:no
 .summary .sumrow+.tot{margin-top:6px}
 .story-hero figure.fvid,.teaser figure.fvid{width:min(100%,360px)}
 .drawer h2{font-size:var(--fs-h3)}
+
+/* WhatsApp help */
+#help{position:fixed;right:24px;bottom:24px;z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+#help.gone{display:none}
+#help .hbtn{display:flex;align-items:center;gap:9px;background:var(--ink);color:#FCF3EC;border:0;padding:13px 20px 13px 17px;font:500 14px var(--sans);letter-spacing:.02em;box-shadow:0 6px 22px rgba(52,26,5,.22);cursor:pointer}
+#help .hbtn svg{width:19px;height:19px}
+#help .hbtn:hover{background:#4A2810}
+#help .hbtn:focus-visible,#help .hpanel button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+#help.open .hbtn{background:#4A2810}
+#help .hpanel{position:relative;width:min(340px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);box-shadow:0 18px 48px rgba(52,26,5,.18);padding:24px 22px 18px}
+#help .hpanel[hidden]{display:none}
+#help .hx{position:absolute;top:8px;right:10px;background:none;border:0;font-size:26px;line-height:1;color:var(--ink2);cursor:pointer;padding:4px 8px}
+#help .hhead{font-family:var(--serif);font-weight:500;font-size:25px;margin:0 0 6px;line-height:1.1}
+#help .hsub{font-size:13.5px;color:var(--ink2);margin:0 0 14px;line-height:1.5}
+#help ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+#help li button{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 2px;font:400 15px var(--sans);color:var(--ink);text-align:left;cursor:pointer}
+#help li button::after{content:'';width:7px;height:7px;border-top:1px solid var(--gold);border-right:1px solid var(--gold);transform:rotate(45deg);flex:none;margin-left:12px}
+#help li button:hover{color:var(--orangeText)}
+#help .hfoot{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+@media (max-width:860px){#help{right:14px;bottom:14px}#help .hbtn{padding:12px 16px 12px 14px;font-size:13.5px}}
+@media print{#help{display:none}}
+@media (max-width:860px){.toast{bottom:84px}}
