@@ -163,7 +163,7 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.97);ba
 
 /* festive split */
 .split{display:grid;grid-template-columns:420px 1fr;gap:64px;align-items:start}
-.split .lead h2{font-size:clamp(36px,3.6vw,52px);margin:18px 0 14px}
+.split .lead h2{font-size:var(--fs-h2);margin:18px 0 14px}
 .split .lead p{color:var(--ink2);font-size:17px}
 .split .lead figure{margin:28px 0 0}
 
@@ -497,6 +497,46 @@ input.t:focus,select.t:focus,textarea.t:focus{border-color:var(--ink);outline:no
 #help li button::after{content:'';width:7px;height:7px;border-top:1px solid var(--gold);border-right:1px solid var(--gold);transform:rotate(45deg);flex:none;margin-left:12px}
 #help li button:hover{color:var(--orangeText)}
 #help .hfoot{font-size:12.5px;color:var(--muted);margin:12px 0 0}
-@media (max-width:860px){#help{right:14px;bottom:14px}#help .hbtn{padding:12px 16px 12px 14px;font-size:13.5px}}
+@media (max-width:860px){#help{right:14px;bottom:14px}#help .hbtn{width:50px;height:50px;padding:0;justify-content:center;border-radius:50%}#help .hbtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}#help .hbtn svg{width:21px;height:21px}}
 @media print{#help{display:none}}
 @media (max-width:860px){.toast{bottom:84px}}
+.tile .note{color:var(--ink2);font-weight:500}
+img.lq{background-size:cover;background-position:center;background-repeat:no-repeat}
+.cfam{display:grid;grid-template-columns:1fr;gap:2px}
+.cchip{display:flex;align-items:center;gap:10px;font-size:14.5px;padding:5px 0;cursor:pointer}
+.cchip input{position:absolute;opacity:0;width:1px;height:1px}
+.cchip i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(52,26,5,.18);flex:none;box-shadow:0 0 0 2px #fff}
+.cchip input:checked+i{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ink)}
+.cchip input:checked~span{font-weight:500}
+.cchip input:focus-visible+i{outline:2px solid var(--gold);outline-offset:3px}
+.flow{list-style:none;display:flex;gap:10px 28px;flex-wrap:wrap;margin:0 0 26px;padding:0;font-size:13.5px;color:var(--muted)}
+.flow li{display:flex;align-items:center;gap:9px}
+.flow li span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--goldline);font-size:12.5px}
+.flow li.on{color:var(--ink);font-weight:500}.flow li.on span{background:var(--ink);border-color:var(--ink);color:#fff}
+.flow li.done span{background:var(--cream);border-color:var(--cream)}
+.done .flow{justify-content:center;margin-bottom:34px}
+.howto{margin-top:30px;padding-top:24px;border-top:1px solid var(--goldline)}
+.howto ol{margin:12px 0 0;padding-left:18px;display:grid;gap:10px;font-size:14px;color:var(--ink2)}
+.howto b{color:var(--ink);font-weight:500}
+/* Phones: a shorter home page. Rows of photos scroll sideways instead of stacking. */
+@media (max-width:860px){
+  .craftband .process{display:none}
+  .craftband figure{width:min(100%,300px)}
+  .craftband .btn{margin-top:22px}
+  .split .lead figure{display:none}
+  .split{gap:26px}
+  .fabrics,.loved,.split .grid.three{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin:0 calc(var(--gut)*-1);padding:0 var(--gut) 6px;scrollbar-width:none}
+  .fabrics::-webkit-scrollbar,.loved::-webkit-scrollbar,.split .grid.three::-webkit-scrollbar{display:none}
+  .fabric{flex:0 0 42%;scroll-snap-align:start}
+  .loved figure{flex:0 0 62%;scroll-snap-align:start}
+  .loved .quote{flex:0 0 78%;scroll-snap-align:start}
+  .split .grid.three>.tile{flex:0 0 62%;scroll-snap-align:start}
+  .teaser .fvid{width:min(100%,230px)}
+  .sec{padding:60px 0}
+}
+@media (max-width:860px){
+  .fabrics,.loved,.split .grid.three{scroll-padding-inline:var(--gut)}
+  .teaser figure.fvid{width:min(100%,230px)}
+  #help{transition:opacity .25s ease,transform .25s ease}
+  #help:not(.shown){opacity:0;transform:translateY(12px);pointer-events:none}
+}

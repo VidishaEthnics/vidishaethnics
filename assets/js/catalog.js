@@ -15,7 +15,7 @@ window.VE_PRODUCTS = [
  {c:'W020',n:'Viscose chikankari kurta set',cat:'Kurta sets',craft:'Chikankari',fab:'Viscose',inc:'Kurta, slip and pants',type:'set',pant:'pant',pat:'chikan',ph:{'Powder blue':['w020-blue-1'],'Baby pink':['w020-pink-1'],'Orange':['w020-orange-1']},cols:['Powder blue','Baby pink','Orange','Purple','White'],inr:3850,tags:['loved','festive'],care:'dry',d:'Handmade chikankari in thread, pearl and cut-dana work on a fluid viscose base. Made for celebrations, comfortable enough to stay in all evening.'},
  {c:'W035',n:'Chikankari A-line kurta set with lace',cat:'Kurta sets',craft:'Chikankari',fab:'Fabric on request',inc:'Kurta, pants and dupatta',type:'frock',pant:'pant',dup:1,pat:'chikan',ph:{'Orange':['w035-orange-1'],'Charcoal':['w035-charcoal-1'],'Purple':['w035-purple-1']},cols:['Orange','Charcoal','Purple','Pink','Yellow','Lavender'],inr:null,tags:['new','festive'],care:'dry',d:'A gathered A-line kurta with a chikankari yoke, lace running down the panels and flowers stitched to the hem. Comes with matching pants and dupatta.'},
  {c:'W033',n:'Pastel chikankari kurta set with dupatta',cat:'Kurta sets',craft:'Chikankari',fab:'Fabric on request',inc:'Kurta, pants and dupatta',type:'set',pant:'pant',dup:1,pat:'chikan',ph:{'Lavender':['w033-lavender-1']},cols:['Lavender','White','Cream','Baby pink','Aqua','Sky blue'],inr:null,tags:['new'],care:'dry',d:'Soft pastel chikankari from neckline to hem, with a matching embroidered dupatta. Six shades, from white to sky blue.'},
- {c:'W034',n:'Cotton chikankari kurti with Banarasi boti',cat:'Kurtas',craft:'Chikankari',fab:'Cotton, self-check weave',inc:'Kurti',type:'kurta',pant:'pant',pat:'chikan',sizes:['44','46','48','50'],ph:{'Sage':['w034-sage-1'],'Pink':['w034-pink-1'],'Turquoise':['w034-turquoise-1']},cols:['Sage','Pink','Turquoise'],inr:null,tags:['new'],care:'cotton',d:'Cotton with a self-check weave, white chikankari and golden Banarasi boti all over. Cut for sizes 44 to 50.'},
+ {c:'W034',note:'Sizes 44 to 50',n:'Cotton chikankari kurti with Banarasi boti',cat:'Kurtas',craft:'Chikankari',fab:'Cotton, self-check weave',inc:'Kurti',type:'kurta',pant:'pant',pat:'chikan',sizes:['44','46','48','50'],ph:{'Sage':['w034-sage-1'],'Pink':['w034-pink-1'],'Turquoise':['w034-turquoise-1']},cols:['Sage','Pink','Turquoise'],inr:null,tags:['new'],care:'cotton',d:'Cotton with a self-check weave, white chikankari and golden Banarasi boti all over. Cut for sizes 44 to 50.'},
  {c:'S013',n:'Chikankari saree, dyed to order',cat:'Sarees',craft:'Chikankari',fab:'Fabric on request',inc:'Saree',type:'saree',pat:'chikan',ph:{'Olive green':['s013-olive-1'],'Pink':['s013-pink-1']},cols:['Olive green','Pink'],inr:null,tags:['festive','new'],care:'dry',d:'A chikankari saree with a zari border, dyed in the colour you choose.'},
  {c:'W011',n:'Muslin chikankari kurta, palazzo and dupatta',cat:'Kurta sets',craft:'Chikankari',fab:'Pure muslin',inc:'Kurta, palazzo and dupatta',type:'set',pant:'palazzo',dup:1,pat:'chikan',ph:{'Mustard':['w011-mustard-2','w011-mustard-1'],'Pink':['w011-pink-1']},cols:['Mustard','Pink','Red','Tangerine','Dark blue','Purple'],inr:3650,care:'cotton',d:'A complete three-piece in pure muslin with tone-on-tone chikankari: a straight kurta, wide palazzo and matching dupatta. It can be dyed in almost any solid colour.'},
  {c:'W017',n:'Short chikankari kurti',cat:'Kurtas',craft:'Chikankari',fab:'Cotton',inc:'Short kurti',type:'short',pant:'pant',pat:'shadow',ph:{'Butter yellow':['w017-butter-1','w017-butter-2']},cols:['Butter yellow','Blue','Pink','White'],inr:1550,tags:['new'],care:'cotton',d:'A hip-length chikankari kurti that works with jeans as easily as with a palazzo. Shown in butter yellow.'},
@@ -48,11 +48,11 @@ window.VE_PRODUCTS = [
 
 window.VE_FABRICS = [
  {k:'Mul and muslin', img:'w022-yellow-2', line:'Soft, breathable cotton for every day'},
+ {k:'Cotton', img:'w034-sage-1', line:'Everyday cotton, from plain weaves to dobby'},
  {k:'Chanderi', img:'w029-aqua-1', line:'Sheer handloom from Madhya Pradesh'},
  {k:'Kota doria', img:'w023-white-2', line:'An airy woven check from Rajasthan'},
- {k:'Viscose', img:'w020-orange-1', line:'Fluid drape for celebrations'},
- {k:'Rayon', img:'w021-purple-1', line:'Light, flowing, all-day comfort'},
- {k:'Dobby cotton', img:'w002-lilac-1', line:'Textured cotton, the Knotty series'}
+ {k:'Viscose and rayon', img:'w021-purple-1', line:'Fluid drape, from rayon to modal satin'},
+ {k:'Silk and tissue', img:'s010-offwhite-1', line:'A soft sheen for festive days'}
 ];
 
 window.VE_SIZES = [

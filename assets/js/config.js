@@ -39,6 +39,9 @@ window.VE_CONFIG = {
   ],
 
   // Show pieces that have no photographs yet (shown as fabric cards).
+  // Small labels on product tiles. Keep it to three or four pieces.
+  badges: { W022: 'Most loved', W005: 'Most loved', W035: 'New', W034: 'New' },
+
   showUnphotographed: true,
 
   leadTime: '7 to 10 business days'

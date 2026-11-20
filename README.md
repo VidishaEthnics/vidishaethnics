@@ -41,5 +41,12 @@ Until `appsScriptUrl` is set, the site runs in preview mode. Requests and admin 
 - Visitors browsing from outside India (detected by IP, with the time zone as a fallback) see the India price × `intlMultiplier` (1.5). The country picker sets the currency.
 - Overseas shipping is estimated from India Post International Speed Post (merchandise) rates in `config.js` (`ems: [first 250 g, each extra 250 g]`) plus GST. Check indiapost.gov.in now and then and update the numbers.
 
-## Share links
-Each product has a share page at `/p/CODE/` that shows the right photo in WhatsApp previews. After adding or renaming products, run `node tools/build_share.js .` and resize the photos into `assets/og/`.
+## Product pages, Google and share links
+Every product has its own page at `/p/CODE/` that Google can read (with product details and price) and that shows the right photo when shared on WhatsApp. `sitemap.xml` lists them all. When a visitor opens one, the full site takes over.
+After adding, renaming or re-pricing products, rebuild them from the site folder:
+
+    node tools/build_share.js .
+    python3 tools/build_og.py
+    python3 tools/build_lqip.py   # blurred previews for any new photos
+
+Then submit `https://vidishaethnics.com/sitemap.xml` once in Google Search Console.
