@@ -42,7 +42,7 @@ window.VE_CONFIG = {
   // Small labels on product tiles. Keep it to three or four pieces.
   badges: { W022: 'Most loved', W005: 'Most loved', W035: 'New', W034: 'New' },
 
-  showUnphotographed: true,
+  showUnphotographed: false,
 
   leadTime: '7 to 10 business days'
 };

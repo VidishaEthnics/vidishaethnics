@@ -25,6 +25,7 @@ const ogJobs = [], urls = [`${BASE}/`];
 
 for (const p of P) {
   if (p.hidden) continue;
+  if (!C.showUnphotographed && !(p.ph && Object.keys(p.ph).length)) continue;
   const lead = Object.keys(p.ph || {})[0];
   const photos = lead ? p.ph[lead] : [];
   const allPhotos = Object.entries(p.ph || {}).flatMap(([c, l]) => l.map(n => [c, n]));

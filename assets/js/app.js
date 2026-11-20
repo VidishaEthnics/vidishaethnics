@@ -361,7 +361,7 @@ function pageShop(preset){
 let PDP={};
 function pagePDP(code){
  const p=prod(code);
- if(!p||p.hidden)return `<div class="wrap empty"><h1>This piece isn't available right now</h1><p style="margin-top:16px"><a class="link" href="#shop">Back to the collection</a></p></div>`;
+ if(!p||p.hidden||(!C.showUnphotographed&&!hasPhoto(p)))return `<div class="wrap empty"><h1>This piece isn't on the website right now</h1><p style="margin-top:16px">Message us on WhatsApp and we'll send you photos and the price.</p><p style="display:flex;gap:24px;flex-wrap:wrap;align-items:center"><a class="btn" target="_blank" rel="noopener" href="${wa('Hi Vidisha Ethnics, could you send me photos and the price of '+code+'?')}">Ask on WhatsApp</a><a class="link" href="#shop">Back to the collection</a></p></div>`;
  if(PDP.c!==code)PDP={c:code,col:leadColour(p),size:null,q:1};
  const isSaree=p.type==='saree'; if(isSaree)PDP.size='Free';
  const rec=S.fit&&S.fit.size;
@@ -384,7 +384,7 @@ function pagePDP(code){
  const catHash=p.cat==='Sarees'?'sarees':p.cat==='Kurtas'?'kurtas':'kurta-sets';
  return `<div class="wrap"><div class="crumbs" style="padding-top:26px"><a href="#">Home</a> / <a href="#shop-${catHash}">${p.cat}</a> / ${esc(p.n)}</div>
  <div class="pdp">
-  <div class="gallery">${tiles.join('')}</div>
+  <div class="gwrap"><div class="gallery">${tiles.join('')}</div>${tiles.length>1?`<div class="gcount" aria-hidden="true"><span>1</span> / ${tiles.length}</div>`:''}</div>
   <div class="info">
    <div class="code">${p.c}${p.craft==='Chikankari'?', hand-embroidered chikankari':''}</div>
    <h1>${esc(p.n)}</h1>
@@ -713,6 +713,7 @@ $('#scrim').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#drawer').classList.contains('on'))closeDrawer()});
 
 document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('trioacc'))PDP.trio=e.target.open},true);
+document.addEventListener('scroll',e=>{const g=e.target;if(!(g instanceof Element)||!g.classList.contains('gallery'))return;const c=g.parentElement.querySelector('.gcount span');if(!c)return;const i=Math.round(g.scrollLeft/(g.clientWidth||1))+1;c.textContent=Math.min(i,g.children.length)},true);
 /* ---------- photo viewer ---------- */
 function openZoom(src){
  let lb=$('#lb');
