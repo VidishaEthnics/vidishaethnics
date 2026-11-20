@@ -591,7 +591,7 @@ function pageStory(){
 
 function pageShipping(){
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Shipping and exchanges</div><h1>Shipping and exchanges</h1><p>Every piece is made to order and shipped with tracking.</p></div>
- <div class="prose" style="max-width:960px">
+ <div class="prose">
   <table class="tbl"><thead><tr><th>Country</th><th>Prices shown in</th><th>Shipping, one kurta set</th></tr></thead><tbody>
   ${C.countries.map(k=>`<tr><td>${k.name}</td><td>${k.currency}</td><td>${k.code==='IN'?'Free':'about '+money(shipAmount([{c:'W020',q:1}],k.code),k.code)}</td></tr>`).join('')}</tbody></table>
   <p class="small">Overseas parcels go by India Post International Speed Post, with tracking. The shipping charge is India Post's rate for the weight of your parcel, plus GST, and it is added to your estimated total before you send a request. Prices for clients outside India are set separately from prices in India.</p>
