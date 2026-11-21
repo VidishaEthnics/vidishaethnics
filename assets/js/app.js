@@ -59,6 +59,7 @@ function shade(h,a){const [r,g,b]=hexRGB(h);const t=a<0?0:255,p=Math.abs(a);cons
 function lum(h){const [r,g,b]=hexRGB(h);return (0.299*r+0.587*g+0.114*b)/255}
 const col=n=>COLORS[n]||'#C9A98C';
 let UID=0;
+const REVIEW={draft:{},sent:null,name:'',msg:''};let LIVE_FAIL=false;
 const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 /* One set of fabric groups, used on the home page, the filters and product labels. */
 function fam(p){const f=p.fab.toLowerCase();if(f.includes('request'))return null;if(f.includes('kota'))return 'Kota doria';if(f.includes('chanderi'))return 'Chanderi';if(f.includes('mul')||f.includes('muslin'))return 'Mul and muslin';if(f.includes('tissue')||f.includes('silk'))return 'Silk and tissue';if(f.includes('rayon')||f.includes('viscose')||f.includes('modal'))return 'Viscose and rayon';return 'Cotton'}
@@ -202,6 +203,20 @@ function swatchArt(kind,bg,cls){
 }
 const heartSVG=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="none" stroke="#3F230D" stroke-width="1.5"/></svg>`;
 
+/* ---------- orders and reviews ---------- */
+const REVIEWS=()=>[...(window.VE_REVIEWS||[]),...(S.liveReviews||[])].filter(r=>r&&r.c&&+r.rating>=1&&+r.rating<=5&&String(r.text||'').trim());
+function revStats(code){const l=REVIEWS().filter(r=>r.c===code);if(!l.length)return null;const sum=l.reduce((a,r)=>a+(+r.rating),0);
+ return {list:l.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))),avg:sum/l.length,count:l.length,dist:[5,4,3,2,1].map(n=>l.filter(r=>Math.round(+r.rating)===n).length)}}
+const showStars=st=>st&&st.count>=(C.reviewsMin||1);
+const STAR='M12 2.6l2.85 5.95 6.55.8-4.83 4.5 1.24 6.48L12 17.2l-5.81 3.13 1.24-6.48-4.83-4.5 6.55-.8z';
+function stars(avg,cls=''){const id='st'+(++UID);const w=Math.max(0,Math.min(5,avg))/5*120;
+ return `<svg class="stars ${cls}" viewBox="0 0 120 24" role="img" aria-label="${(+avg).toFixed(1)} out of 5 stars"><defs><clipPath id="${id}"><rect width="${w.toFixed(1)}" height="24"/></clipPath></defs>${[0,1,2,3,4].map(k=>`<path d="${STAR}" transform="translate(${k*24})" class="se"/>`).join('')}<g clip-path="url(#${id})">${[0,1,2,3,4].map(k=>`<path d="${STAR}" transform="translate(${k*24})" class="sf"/>`).join('')}</g></svg>`}
+const avgTxt=v=>(Math.round(v*10)/10).toFixed(1);
+function ordersNice(n){if(!n||n<5)return null;if(n>=30)return Math.floor(n/10)*10+'+';if(n>=10)return Math.floor(n/5)*5+'+';return String(n)}
+function placesTxt(l){if(!l||l.length<2)return '';return l.length===2?l.join(' and '):l.slice(0,-1).join(', ')+' and '+l[l.length-1]}
+const bagIcon=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
+const monthYr=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'})}catch(e){return ''}};
+
 
 
 function thumb(p,c){const ph=photoOf(p,c);return ph.length?`<img src="${ph[0]}" alt="" loading="lazy">`:detail(p,c,{})}
@@ -246,7 +261,7 @@ function tile(p,opt){
  const alt=altSrc?`<img class="alt" src="${altSrc}" alt="" loading="lazy">`:ph.length?'':figure(p,c,{cls:'alt',vb:'-30 0 300 560',bg:'#FCF3EC'});
  return `<article class="tile"><a class="im" href="#p-${p.c}" aria-label="${esc(p.n)}">${main}${alt}${tag?`<span class="tag">${tag}</span>`:''}${ph.length?'':'<span class="soon">Photographs coming soon</span>'}</a>
  <button class="heart ${on?'on':''}" data-act="wish" data-c="${p.c}" aria-pressed="${on}" aria-label="${on?'Remove from':'Save to'} wishlist">${heartSVG}</button>
- <div class="meta"><a class="nm" href="#p-${p.c}">${esc(p.n)}</a><span class="cr">${esc(sub(p))}</span>${p.note?`<span class="cr note">${esc(p.note)}</span>`:''}<span class="pr">${price(p.inr)}</span>
+ <div class="meta"><a class="nm" href="#p-${p.c}">${esc(p.n)}</a>${(()=>{const st=revStats(p.c);return showStars(st)?`<span class="trate">${stars(st.avg)}<span>${avgTxt(st.avg)} (${st.count})</span></span>`:''})()}<span class="cr">${esc(sub(p))}</span>${p.note?`<span class="cr note">${esc(p.note)}</span>`:''}<span class="pr">${price(p.inr)}${ordersNice(p.orders)&&p.orders>=10?`<em class="tord">${ordersNice(p.orders)} orders</em>`:''}</span>
  <span class="dots" aria-label="${p.cols.length} colours">${p.cols.slice(0,7).map(x=>`<i style="background:${col(x)}" title="${esc(x)}"></i>`).join('')}${p.cols.length>7?`<span class="cr">+${p.cols.length-7}</span>`:''}</span></div></article>`;
 }
 const PROCESS=`<ol class="process">
@@ -262,7 +277,7 @@ const COUNTRY_NAMES=['India','USA','UK','Sri Lanka','Malaysia','UAE'];
 /* ---------- pages ---------- */
 function pageHome(){
  const v=visible();
- const loved=v.filter(hasPhoto).sort(featuredSort).slice(0,4);
+ const loved=v.filter(hasPhoto).sort((a,b)=>(b.orders||0)-(a.orders||0)||featuredSort(a,b)).slice(0,4);
  const fresh=v.filter(p=>hasPhoto(p)&&!loved.includes(p)&&p.c!=='S008'&&((p.tags||[]).includes('new')||(p.tags||[]).includes('festive'))).sort((x,y)=>((y.tags||[]).includes('new'))-((x.tags||[]).includes('new'))).slice(0,3);
  const hs=prod('S010'), w34=prod('W034');
  return `
@@ -276,8 +291,9 @@ function pageHome(){
   <figure class="reveal d2"><div style="position:relative"><div class="frame" aria-hidden="true"></div><div class="archimg"><img src="${IMG('s010-offwhite-2')}" alt="Off-white tissue chikankari saree with a gold border" fetchpriority="high"></div></div>
    <figcaption><a href="#p-S010">${esc(hs.n)}</a><span>${price(hs.inr)}</span></figcaption></figure>
  </section>
+ ${C.ordersSoFar?`<section class="proofband"><div class="wrap"><p>More than ${esc(String(C.ordersSoFar).replace('+',''))} pieces made to order since ${esc(C.ordersSince||'2025')}, for women across India and in Dubai, Malaysia and the USA.</p></div></section>`:''}
  <section class="sec"><div class="wrap">
-  <div class="sechead"><div><h2>Most loved</h2><p>The pieces our clients come back for, in new colours.</p></div><a class="link" href="#shop">Shop all</a></div>
+  <div class="sechead"><div><h2>Best sellers</h2><p>Our most-ordered pieces since ${esc(C.ordersSince||'2025')}.</p></div><a class="link" href="#shop">Shop all</a></div>
   <div class="grid">${loved.map(p=>tile(p,{nobadge:1})).join('')}</div>
  </div></section>
 
@@ -388,7 +404,9 @@ function pagePDP(code){
   <div class="info">
    <div class="code">${p.c}${p.craft==='Chikankari'?', hand-embroidered chikankari':''}</div>
    <h1>${esc(p.n)}</h1>
+   ${(()=>{const st=revStats(p.c);return showStars(st)?`<button type="button" class="rchip" data-act="toreviews">${stars(st.avg)}<b>${avgTxt(st.avg)}</b><span>${st.count} ${st.count===1?'review':'reviews'}</span></button>`:''})()}
    <div class="price">${price(p.inr)}<small>${note}</small></div>
+   ${ordersNice(p.orders)?`<div class="proof">${bagIcon}<div><b>Ordered ${ordersNice(p.orders)} ${p.orders===1?'time':'times'}</b>${placesTxt(p.places)?`<span>Worn in ${esc(placesTxt(p.places))}</span>`:''}</div></div>`:''}
    <p style="color:var(--ink2);margin-top:18px;font-size:16.5px">${esc(p.d)}</p>
    <div class="opt"><div class="lab"><span>Colour: <b>${esc(PDP.col)}</b></span><span class="small">${p.cols.length} colours</span></div>
     <div class="swatches">${p.cols.map(c=>`<button class="swatch ${PDP.col===c?'on':''}" style="background:${col(c)}" data-act="col" data-v="${esc(c)}" aria-label="${esc(c)}" aria-pressed="${PDP.col===c}"></button>`).join('')}</div>${stand?`<p class="small" style="margin:10px 0 0">We haven't photographed ${esc(PDP.col)} yet. Ask us on WhatsApp for a picture of the fabric.</p>`:''}</div>
@@ -413,10 +431,55 @@ function pagePDP(code){
  </div>
  ${!isSaree?`<details class="trioacc"${PDP.trio?' open':''}><summary><span>See how it falls on three body types</span><small>Drawn in ${esc(PDP.col)}, to help you picture the length</small></summary>
   <div class="trio">${[['petite','Petite',"5'1\", size 36"],['regular','Regular',"5'5\", size 40"],['curvy','Curvy',"5'6\", size 44"]].map(([b,l,m])=>`<figure>${figure(p,PDP.col,{body:b})}<figcaption><b>${l}</b>${m}</figcaption></figure>`).join('')}</div></details>`:''}
+ ${reviewsBlock(p)}
  ${related.length?`<section class="sec" style="padding-top:72px"><div class="sechead"><div><h2>You may also like</h2></div></div><div class="grid">${related.map(tile).join('')}</div></section>`:''}
  </div>`;
 }
 
+function reviewCard(r,p){
+ return `<article class="rcard"><div class="rtop">${stars(+r.rating)}<span class="rdate">${esc(monthYr(r.date))}</span></div>
+ <p class="rtext">${esc(r.text)}</p>
+ ${r.photo?`<button type="button" class="rphoto" data-act="zoom" data-v="${/^https?:/.test(r.photo)?esc(r.photo):'assets/img/reviews/'+esc(r.photo)+'.webp'}" aria-label="See ${esc(r.name||'the client')}'s photo"><img src="${/^https?:/.test(r.photo)?esc(r.photo):'assets/img/reviews/'+esc(r.photo)+'.webp'}" alt="" loading="lazy"></button>`:''}
+ <div class="rwho"><b>${esc(r.name||'A client')}</b>${r.city?`<span>${esc(r.city)}</span>`:''}${r.verified!==false?`<span class="rver"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Verified order</span>`:''}</div>
+ ${r.colour||r.size?`<div class="rbought">Bought in ${esc(r.colour||'')}${r.size?`${r.colour?', ':''}size ${esc(r.size)}`:''}</div>`:''}</article>`;
+}
+function reviewsBlock(p){
+ const st=revStats(p.c);
+ if(!st)return p.orders?`<div class="rinvite"><p>Bought this piece? <a class="link" href="#review-${p.c}">Write a review</a></p></div>`:'';
+ const shown=PDP.allrev?st.list:st.list.slice(0,4);
+ return `<section class="reviews" id="reviews" aria-labelledby="revh">
+ <div class="rhead"><h2 id="revh">Client reviews</h2><a class="link" href="#review-${p.c}">Write a review</a></div>
+ <div class="rgrid">
+  <div class="rsum">${showStars(st)?`<div class="ravg">${avgTxt(st.avg)}</div>${stars(st.avg,'lg')}<p>Based on ${st.count} ${st.count===1?'review':'reviews'}</p>
+   <ul class="rdist">${st.dist.map((n,i)=>`<li><span>${5-i}</span><i><b style="width:${st.count?Math.round(n/st.count*100):0}%"></b></i><span>${n}</span></li>`).join('')}</ul>`:`<p class="small" style="margin:0">From clients who ordered this piece.</p>`}
+   ${ordersNice(p.orders)?`<p class="rorders">Ordered ${ordersNice(p.orders)} times since ${esc(C.ordersSince||'2025')}</p>`:''}</div>
+  <div class="rlist">${shown.map(r=>reviewCard(r,p)).join('')}
+   ${st.list.length>shown.length?`<button type="button" class="btn ghost" data-act="allrev">Show all ${st.count} reviews</button>`:''}</div>
+ </div></section>`;
+}
+function pageReview(code){
+ const p=code?prod(code):null;
+ if(!p||!hasPhoto(p)){const opts=visible().filter(hasPhoto);
+  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Write a review</div><h1>Write a review</h1><p>Choose the piece you ordered.</p></div>
+  <div class="wrap"><div class="rpick">${opts.map(x=>`<a href="#review-${x.c}" class="rpicki">${thumb(x,leadColour(x))}<span>${esc(x.n)}</span></a>`).join('')}</div></div>`}
+ if(REVIEW.sent===p.c)return `<div class="done"><img src="assets/logo/medallion.png" alt="" style="width:64px;margin:0 auto 24px"><h1>Thank you${REVIEW.name?', '+esc(REVIEW.name.split(' ')[0]):''}.</h1><p style="color:var(--ink2)">${LIVE&&!LIVE_FAIL?'Your review has reached us. We read every one before it goes on the website.':'<b>One last step:</b> send it to us on WhatsApp so we receive it. You can add a photo of you in your piece there too.'}</p>${LIVE&&!LIVE_FAIL?'':`<a class="btn" target="_blank" rel="noopener" href="${wa(REVIEW.msg)}">Send my review on WhatsApp</a>`}<p style="margin-top:26px"><a class="link" href="#p-${p.c}">Back to ${esc(p.n)}</a></p></div>`;
+ const r=REVIEW.draft[p.c]||{};
+ return `<div class="wrap pagehead"><div class="crumbs"><a href="#p-${p.c}">${esc(p.n)}</a> / Write a review</div><h1>How do you like it?</h1><p>Your review helps other women choose. We read every review before it appears on the website.</p></div>
+ <div class="wrap two"><form class="form" data-form="review" data-c="${p.c}" novalidate>
+  <fieldset class="fs"><legend>Your rating</legend>
+   <div class="rpickstars" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(n=>`<label class="rps"><input type="radio" name="rating" value="${n}" ${+r.rating===n?'checked':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}"/></svg><span class="sr">${n} ${n===1?'star':'stars'}</span></label>`).join('')}<span class="rpslabel" aria-live="polite">${r.rating?['','Not for me','Could be better','Good','Very good','Loved it'][r.rating]:''}</span></div>
+  </fieldset>
+  <fieldset class="fs"><legend>Your review</legend><div class="form">
+   <label class="f"><span class="req">What did you think of the fabric, fit and embroidery?</span><textarea class="t" name="text" rows="5" maxlength="1200" placeholder="For example, how it felt to wear, how the size worked for you, the occasion you wore it to">${esc(r.text||'')}</textarea></label>
+   <div class="row2"><label class="f"><span class="req">Your name</span><input class="t" name="name" autocomplete="name" placeholder="For example, Ananya R." value="${esc(r.name||'')}"></label><label class="f"><span>City</span><input class="t" name="city" autocomplete="address-level2" value="${esc(r.city||'')}"></label></div>
+   <div class="row3"><label class="f"><span>Colour</span><select class="t" name="colour"><option value="">Choose</option>${p.cols.map(c=>`<option ${r.colour===c?'selected':''}>${esc(c)}</option>`).join('')}</select></label><label class="f"><span>Size</span><input class="t" name="size" value="${esc(r.size||'')}"></label><label class="f"><span>Request number</span><input class="t" name="request" placeholder="Optional" value="${esc(r.request||'')}"></label></div>
+  </div></fieldset>
+  <div class="err" id="reverr" role="alert"></div>
+  <button class="btn" type="submit">Send my review</button>
+  <p class="small" style="margin:0">We show your first name, city and the piece you ordered. Never your number.</p>
+ </form>
+ <aside class="summary"><div class="rprod">${thumb(p,leadColour(p))}<div><div class="small">${p.c}</div><b>${esc(p.n)}</b></div></div></aside></div>`;
+}
 function fitForm(ctx){
  const f=S.fit||{unit:'in'}, u=f.unit||'in';
  return `<form class="form" data-form="fit" data-ctx="${ctx}" data-unit="${u}" novalidate>
@@ -631,6 +694,7 @@ async function api(action,payload,method='POST'){
  const r=await fetch(C.appsScriptUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action},payload))});return r.json();
 }
 const adminOrders=()=>S.admin.live||S.orders;
+function reviewAsk(o){const first=o.name.replace(/^Sample: /,'').split(' ')[0];const it=o.items[0]||{};return `Hi ${first}, we hope you're enjoying your ${(prod(it.c)||{}).n||'piece'} from Vidisha Ethnics.\n\nWould you share a few words and a rating out of 5? It takes a minute and helps other women choose:\n${SITE}/#review-${it.c||''}\n\nA photo of you wearing it would make our day, only if you're happy for us to share it.`}
 function adminMsg(o){const first=o.name.replace(/^Sample: /,'').split(' ')[0];return `Hi ${first}, thank you for your order request ${o.id} with Vidisha Ethnics.\n\nTotal: ${totalLabel(orderTotal(o),orderOnReq(o),o.cc)}\n${shipLine(o)}.\nOnce we receive payment we'll start making your piece. It will be ready in ${C.leadTime}.`}
 function pageAdmin(){
  const A=S.admin;
@@ -651,7 +715,7 @@ function pageAdmin(){
    <div style="margin:14px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px">${sel.items.map(it=>{const p=prod(it.c);return `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span>${it.c} ${p?esc(p.n):''}<br><span class="small">${esc(it.col)}, size ${it.size}, qty ${it.q}</span></span><span>${p&&priced(p.inr)?money(amount(p.inr,sel.cc)*it.q,sel.cc):'On request'}</span></div>`}).join('')}</div>
    <p style="font-size:14px;margin:0 0 6px"><b>Measurements (${esc(sel.m.unit)})</b><br>Bust ${esc(sel.m.bust)||'–'}, waist ${esc(sel.m.waist)||'–'}, hip ${esc(sel.m.hip)||'–'}, shoulder ${esc(sel.m.shoulder)||'–'}, height ${esc(sel.m.height)||'–'}${sel.m.length?', length '+esc(sel.m.length):''}</p>
    ${sel.by?`<p style="font-size:14px;margin:0 0 6px"><b>Needed by</b> ${esc(sel.by)}</p>`:''}${sel.notes?`<p style="font-size:14px;margin:0 0 6px"><b>Notes</b> ${esc(sel.notes)}</p>`:''}
-   <div style="display:grid;gap:8px;margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="${wa(adminMsg(sel),sel.wa)}">Message customer on WhatsApp</a><button class="btn ghost" data-act="copymsg" data-v="${sel.id}">Copy payment message</button></div></div>`:`<div class="apanel" style="margin-top:0"><p class="small" style="margin:0">Select a request to see measurements, notes and a ready-made WhatsApp message.</p></div>`}</div></div>`;
+   <div style="display:grid;gap:8px;margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="${wa(adminMsg(sel),sel.wa)}">Message customer on WhatsApp</a><button class="btn ghost" data-act="copymsg" data-v="${sel.id}">Copy payment message</button>${sel.status==='Delivered'?`<a class="btn ghost" target="_blank" rel="noopener" href="${wa(reviewAsk(sel),sel.wa)}">Ask for a review</a>`:''}</div></div>`:`<div class="apanel" style="margin-top:0"><p class="small" style="margin:0">Select a request to see measurements, notes and a ready-made WhatsApp message.</p></div>`}</div></div>`;
  }
  if(A.tab==='products'){
   body=`<div class="apanel"><h2 class="t3">Products</h2><p class="small" style="margin:6px 0 0">Change a price or hide a piece. ${LIVE?'Changes are saved to the Products tab of your order sheet and show on the site for everyone.':'In preview mode, changes are saved in this browser only.'} To add photographs, send them to your developer or place them in assets/img.</p></div>
@@ -682,6 +746,7 @@ function route(){
  else if(h.startsWith('shop-fabric-')){const fb=FAB_ORDER.find(x=>slug(x)===h.slice(12));html=pageShop({fabs:fb?[fb]:[]});active='shop';title=fb||''}
  else if(h==='shop-chikankari'){html=pageShop({crafts:['Chikankari']});active='shop'}
  else if(h==='shop-new'){html=pageShop({cat:'New'});title='New'}
+ else if(h==='review'||h.startsWith('review-')){html=pageReview(h.slice(7));title='Write a review'}
  else if(h.startsWith('p-')){html=pagePDP(h.slice(2));const p=prod(h.slice(2));title=p?p.n:''}
  else if(h==='fit')html=pageFit(),title='Find my size';
  else if(h==='bag')html=pageBag(),title='Your bag';
@@ -739,6 +804,8 @@ document.addEventListener('click',e=>{
  if(t.tagName==='A'&&a!=='shopcraft'&&a!=='pickcol')return;
  switch(a){
   case 'share':{const p=prod(v);const u=shareUrl(v);if(navigator.share){navigator.share({title:p.n+' | Vidisha Ethnics',url:u}).catch(()=>{})}else{try{navigator.clipboard.writeText(u).then(()=>toast('Link copied'),()=>toast(u))}catch(e){toast(u)}}break}
+  case 'toreviews':{const el=$('#reviews');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});break}
+  case 'allrev':{PDP.allrev=true;rerender();break}
   case 'zoom':{openZoom(v);break}
   case 'sizeguide':{const d=$('#sizeacc');if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}break}
   case 'szu':{PDP.u=v;rerender();const d=$('#sizeacc');if(d)d.open=true;break}
@@ -774,7 +841,8 @@ document.addEventListener('click',e=>{
  }
 });
 document.addEventListener('change',async e=>{
- const t=e.target,a=t.dataset.act;if(!a)return;
+ const t=e.target;if(t.name==='rating'&&t.closest('.rpickstars')){const l=t.closest('.rpickstars').querySelector('.rpslabel');if(l)l.textContent=['','Not for me','Could be better','Good','Very good','Loved it'][+t.value];const f=t.closest('form');if(f)REVIEW.draft[f.dataset.c]=Object.fromEntries(new FormData(f).entries())}
+ const a=t.dataset.act;if(!a)return;
  if(a==='country'){S.country=t.value;store.set('picked',1);save();rerender();toast(`Showing prices for ${cty().name}`)}
  if(a==='reqcountry'){S.country=t.value;store.set('picked',1);save();const form=t.closest('form');const keep=Object.fromEntries(new FormData(form).entries());rerender();const f2=document.querySelector('form[data-form=req]');if(f2)Object.entries(keep).forEach(([k,v])=>{const el=f2.elements[k];if(el&&el.type!=='checkbox'&&k!=='country')el.value=v})}
  if(a==='fcat'){S.f.cat=t.value;rerender()}
@@ -794,6 +862,17 @@ document.addEventListener('change',async e=>{
 document.addEventListener('submit',async e=>{
  const form=e.target,k=form.dataset.form;if(!k)return;e.preventDefault();
  const fd=Object.fromEntries(new FormData(form).entries());
+ if(k==='review'){
+  const c=form.dataset.c,p=prod(c),err=$('#reverr');REVIEW.draft[c]=fd;
+  const rating=+fd.rating,text=(fd.text||'').trim(),name=(fd.name||'').trim();
+  if(!rating){err.textContent='Choose a rating from 1 to 5 stars.';form.querySelector('.rps input').focus();return}
+  if(text.length<10){err.textContent='Write a line or two about the piece.';form.elements.text.focus();return}
+  if(!name){err.textContent='Add your name as you would like it shown, for example Ananya R.';form.elements.name.focus();return}
+  const rv={code:c,rating,text,name,city:(fd.city||'').trim(),colour:fd.colour||'',size:(fd.size||'').trim(),request:(fd.request||'').trim()};
+  REVIEW.name=name;REVIEW.msg=`Review for ${c} ${p.n}${rv.colour?', '+rv.colour:''}${rv.size?', size '+rv.size:''}\nRating: ${'★'.repeat(rating)}${'☆'.repeat(5-rating)} (${rating}/5)\n\n${text}\n\n${name}${rv.city?', '+rv.city:''}${rv.request?'\nRequest '+rv.request:''}\n\nYou may show this review on your website.`;
+  if(LIVE){try{const btn=form.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Sending…';const r=await api('review',{review:rv});if(!r||!r.ok)throw new Error('x')}catch(x){REVIEW.sent=c;LIVE_FAIL=true;}}
+  REVIEW.sent=c;rerender();window.scrollTo(0,0);return;
+ }
  if(k==='fit'){
   const unit=form.dataset.unit||'in',err=form.querySelector('[data-err]');
   const B=parseFloat(fd.bust),H=parseFloat(fd.hip),lim=unit==='in'?[24,70]:[60,180];
@@ -891,7 +970,7 @@ async function boot(){
  geoLookup().then(g=>{if(!g)return;store.set('geo',g);const changed=g!==S.geo;S.geo=g;
   if(!store.get('picked',0)){const d=defaultCountry(g);if(d!==S.country){S.country=d;save();rerender();return}}
   if(changed)rerender()});
- if(LIVE){try{const r=await api('catalog',{},'GET');if(r&&r.ok&&r.overrides){S.over=r.overrides;rerender()}}catch(e){}}
+ if(LIVE){try{const r=await api('catalog',{},'GET');if(r&&r.ok){if(r.overrides)S.over=r.overrides;if(Array.isArray(r.reviews))S.liveReviews=r.reviews;rerender()}}catch(e){}}
 }
 boot();
 })();

@@ -8,6 +8,8 @@ const BASE = 'https://vidishaethnics.com';
 global.window = {};
 require(path.join(root, 'assets/js/config.js'));
 require(path.join(root, 'assets/js/catalog.js'));
+try { require(path.join(root, 'assets/js/reviews.js')); } catch (e) {}
+const REV = (window.VE_REVIEWS || []).filter(r => r && r.c && +r.rating >= 1 && +r.rating <= 5 && String(r.text || '').trim());
 const P = window.VE_PRODUCTS, C = window.VE_CONFIG, SIZES = window.VE_SIZES, CARE = window.VE_CARE || {};
 const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 const fam = p => { const f = p.fab.toLowerCase(); if (f.includes('request')) return null; if (f.includes('kota')) return 'Kota doria'; if (f.includes('chanderi')) return 'Chanderi'; if (f.includes('mul') || f.includes('muslin')) return 'Mul and muslin'; if (f.includes('tissue') || f.includes('silk')) return 'Silk and tissue'; if (f.includes('rayon') || f.includes('viscose') || f.includes('modal')) return 'Viscose and rayon'; return 'Cotton'; };
@@ -41,6 +43,7 @@ for (const p of P) {
     brand: { '@type': 'Brand', name: 'Vidisha Ethnics' },
     image: allPhotos.map(([, n]) => `${BASE}/assets/img/${n}.webp`),
     material: p.fab, color: p.cols.join(', '), category: p.cat,
+    ...(() => { const l = REV.filter(r => r.c === p.c); if (!l.length) return {}; const avg = l.reduce((a, r) => a + (+r.rating), 0) / l.length; return { aggregateRating: { '@type': 'AggregateRating', ratingValue: Math.round(avg * 10) / 10, reviewCount: l.length, bestRating: 5, worstRating: 1 }, review: l.slice(0, 10).map(r => ({ '@type': 'Review', reviewRating: { '@type': 'Rating', ratingValue: +r.rating, bestRating: 5 }, author: { '@type': 'Person', name: r.name || 'Client' }, reviewBody: r.text, ...(r.date ? { datePublished: r.date } : {}) })) }; })(),
     ...(priced(p.inr) ? { offers: { '@type': 'Offer', url, priceCurrency: 'INR', price: p.inr, availability: 'https://schema.org/MadeToOrder', itemCondition: 'https://schema.org/NewCondition', seller: { '@type': 'Organization', name: 'Vidisha Ethnics' } } } : {})
   };
   const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
@@ -81,6 +84,7 @@ ${fontLinks}
   <div class="code">${p.c}, ${esc(craft.toLowerCase())}</div>
   <h1>${esc(p.n)}</h1>
   <div class="price">${priced(p.inr) ? inr(p.inr) + '<small>Price for delivery in India. Free shipping within India.</small>' : 'Price on request<small>We confirm the price on WhatsApp.</small>'}</div>
+  ${p.orders >= 5 ? `<p style="margin-top:14px;font-size:15px"><b style="font-weight:500">Ordered ${p.orders >= 30 ? Math.floor(p.orders / 10) * 10 + '+' : p.orders >= 10 ? Math.floor(p.orders / 5) * 5 + '+' : p.orders} times</b>${p.places && p.places.length > 1 ? `. Worn in ${esc(p.places.slice(0, -1).join(', ') + ' and ' + p.places[p.places.length - 1])}.` : ''}</p>` : ''}
   <p style="color:var(--ink2);margin-top:18px">${esc(p.d)}</p>
   <table class="tbl" style="margin-top:22px"><tbody>
    <tr><td>Fabric</td><td>${esc(p.fab)}</td></tr>

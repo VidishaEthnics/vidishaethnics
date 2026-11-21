@@ -50,3 +50,13 @@ After adding, renaming or re-pricing products, rebuild them from the site folder
     python3 tools/build_lqip.py   # blurred previews for any new photos
 
 Then submit `https://vidishaethnics.com/sitemap.xml` once in Google Search Console.
+
+## Reviews
+Only real reviews from real clients, shared with their permission.
+- After delivery, open the order in Admin and tap "Ask for a review". It sends a WhatsApp message with a link to the review page for that piece (vidishaethnics.com/#review-CODE).
+- Before the order sheet is connected, reviews arrive on WhatsApp. Add each one as a line in `assets/js/reviews.js` (the format is explained at the top of that file), then run `node tools/build_share.js .` so Google sees the rating.
+- Once the sheet is connected, reviews land in its Reviews tab. Tick "Approved" and the review appears on the site.
+- Stars show on a piece once it has 3 reviews (`reviewsMin` in config.js). Review cards show from the first one.
+
+## Order counts
+"Ordered 30+ times" and "Worn in …" come from `orders` and `places` on each product in catalog.js, taken from the order sheet. Counts are rounded down (34 shows as 30+). Update them every month or two, and `ordersSoFar` in config.js for the home page line.

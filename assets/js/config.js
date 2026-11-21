@@ -40,7 +40,14 @@ window.VE_CONFIG = {
 
   // Show pieces that have no photographs yet (shown as fabric cards).
   // Small labels on product tiles. Keep it to three or four pieces.
-  badges: { W022: 'Most loved', W005: 'Most loved', W035: 'New', W034: 'New' },
+  badges: { W005: 'Best seller', W022: 'Best seller', W035: 'New', W034: 'New' },
+
+  // Shown on the home page. Update as orders grow.
+  ordersSoFar: '210+',
+  ordersSince: 'March 2025',
+
+  // Stars appear on a product once it has at least this many reviews.
+  reviewsMin: 3,
 
   showUnphotographed: false,
 

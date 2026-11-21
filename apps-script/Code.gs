@@ -6,6 +6,7 @@
  *  - Emails a copy to NOTIFY_EMAIL.
  *  - Optionally sends a WhatsApp alert through the WhatsApp Business Cloud API.
  *  - Lets the website admin read orders, change status, and change product price or visibility.
+ *  - Receives client reviews into the "Reviews" tab. Tick "Approved" on a row and it appears on the website.
  *
  * Setup (about 10 minutes)
  *  1. Create a Google Sheet called "Vidisha Ethnics orders". Extensions > Apps Script. Paste this file.
@@ -22,6 +23,7 @@
 const ORDER_HEADERS = ['Request','Received','Status','Name','WhatsApp','Email','City','Country','Currency','Estimated total',
   'Items','Bust','Waist','Hip','Shoulder','Height','Kurta length','Unit','Needed by','Notes','WhatsApp consent','Order JSON'];
 const PRODUCT_HEADERS = ['Code','India price','Hidden','Updated'];
+const REVIEW_HEADERS = ['Received','Approved','Code','Rating','Review','Name','City','Colour','Size','Request','WhatsApp','Photo link'];
 const STATUSES = ['New','Payment pending','Confirmed','In making','Shipped','Delivered','Cancelled'];
 
 function setup() {
@@ -37,6 +39,11 @@ function setup() {
   if (p.getLastRow() === 0) p.appendRow(PRODUCT_HEADERS);
   p.setFrozenRows(1);
   p.getRange(1, 1, 1, PRODUCT_HEADERS.length).setFontWeight('bold').setBackground('#F8E5D7');
+  let r = ss.getSheetByName('Reviews') || ss.insertSheet('Reviews');
+  if (r.getLastRow() === 0) r.appendRow(REVIEW_HEADERS);
+  r.setFrozenRows(1);
+  r.getRange(1, 1, 1, REVIEW_HEADERS.length).setFontWeight('bold').setBackground('#F8E5D7');
+  r.getRange(2, 2, 2000, 1).insertCheckboxes();
 }
 
 const props = () => PropertiesService.getScriptProperties();
@@ -45,7 +52,7 @@ const authed = key => key && key === props().getProperty('ADMIN_KEY');
 
 function doGet(e) {
   const a = (e.parameter && e.parameter.action) || '';
-  if (a === 'catalog') return json({ ok: true, overrides: readOverrides() });
+  if (a === 'catalog') return json({ ok: true, overrides: readOverrides(), reviews: readReviews() });
   if (a === 'orders') {
     if (!authed(e.parameter.key)) return json({ ok: false, error: 'unauthorised' });
     return json({ ok: true, orders: readOrders() });
@@ -59,6 +66,7 @@ function doPost(e) {
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     if (body.action === 'order') return json(saveOrder(body.order));
+    if (body.action === 'review') return json(saveReview(body.review));
     if (!authed(body.key)) return json({ ok: false, error: 'unauthorised' });
     if (body.action === 'status') return json(setStatus(body.id, body.status));
     if (body.action === 'product') return json(setProduct(body.code, body.inr, body.hidden));
@@ -144,4 +152,24 @@ function setProduct(code, inr, hidden) {
   const i = codes.indexOf(code);
   if (i < 0) sh.appendRow(row); else sh.getRange(i + 2, 1, 1, 4).setValues([row]);
   return { ok: true };
+}
+
+/* ---------- reviews ---------- */
+function clean_(v, n) { v = String(v == null ? '' : v).slice(0, n || 600); return /^[=+\-@]/.test(v) ? "'" + v : v; }
+function saveReview(r) {
+  r = r || {};
+  const rating = Math.round(Number(r.rating));
+  if (!/^[A-Z]\d{3}$/.test(r.code || '') || !(rating >= 1 && rating <= 5) || !String(r.text || '').trim()) return { ok: false, error: 'incomplete' };
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reviews');
+  sh.appendRow([new Date(), false, r.code, rating, clean_(r.text, 1200), clean_(r.name, 60), clean_(r.city, 60), clean_(r.colour, 40), clean_(r.size, 10), clean_(r.request, 20), clean_(r.wa, 30), '']);
+  const to = props().getProperty('NOTIFY_EMAIL');
+  if (to) MailApp.sendEmail(to, 'New review for ' + r.code + ' (' + rating + '/5)', (r.name || 'A client') + ', ' + (r.city || '') + '\n\n' + r.text + '\n\nTick Approved in the Reviews tab to show it on the website.');
+  return { ok: true };
+}
+function readReviews() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reviews');
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, REVIEW_HEADERS.length).getValues()
+    .filter(r => r[1] === true && r[2] && r[3])
+    .map(r => ({ c: String(r[2]), rating: Number(r[3]), text: String(r[4]), name: String(r[5]), city: String(r[6]), colour: String(r[7]), size: String(r[8]), photo: String(r[11] || ''), date: Utilities.formatDate(new Date(r[0]), 'Asia/Kolkata', 'yyyy-MM-dd'), verified: !!r[9] }));
 }
