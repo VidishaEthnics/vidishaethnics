@@ -43,7 +43,7 @@ window.VE_CONFIG = {
   badges: { W005: 'Best seller', W022: 'Best seller', W035: 'New', W034: 'New' },
 
   // The line under the home page hero. Update as orders grow.
-  homeProof: 'More than 350 premium pieces delivered to women in India, Dubai, Malaysia, Sri\u00a0Lanka and the\u00a0USA.',
+  homeProof: 'More than 350 handmade premium pieces delivered to women in India, Dubai, Malaysia, Sri\u00a0Lanka and the\u00a0USA.',
   ordersSince: 'March 2025',
 
   // Stars appear on a product once it has at least this many reviews.
