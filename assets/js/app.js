@@ -232,7 +232,7 @@ function header(active){
  const n=S.bag.reduce((a,i)=>a+i.q,0);
  const nav=NAV.map(([h,t])=>`<a href="#${h}" class="${active===h?'on':''}">${t}</a>`).join('');
  return `${LIVE||C.whatsapp?'':`<div class="demo">Preview mode. Order requests stay in this browser until the order sheet is connected. <a href="#admin">Admin</a></div>`}
- <div class="announce"><span class="long">Handmade to order and delivered across India, the USA, the UK, Sri Lanka, Malaysia and the UAE</span><span class="short">Made to order. Delivered to India and 5 countries</span></div>
+ <div class="announce"><span class="long">Handmade to order in your size, ready in ${esc(C.leadTime)}</span><span class="short">Handmade to order in your size</span></div>
  <header class="site"><div class="wrap hbar">
   <div style="display:flex;align-items:center;gap:14px"><button class="menuBtn" data-act="menu" aria-label="Menu" aria-expanded="false" style="background:none;border:0;padding:8px 0"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18" stroke="#341A05" stroke-width="1.5"/></svg></button><nav class="hnav" aria-label="Main">${nav}</nav></div>
   <a class="logo" href="#" aria-label="Vidisha Ethnics, home"><img src="${LOGO}" alt="Vidisha Ethnics" width="172" height="61"></a>
@@ -395,7 +395,7 @@ function pagePDP(code){
  const related=visible().filter(x=>x.c!==p.c&&(fam(x)===fam(p)||x.cat===p.cat)).sort(featuredSort).slice(0,4);
  const k=cty();
  const one=[{c:p.c,q:1}];
- const note=!priced(p.inr)?`We'll confirm the price for ${k.code==='IN'?'India':k.name} on WhatsApp.`:k.code==='IN'?(abroad()?'Price for orders placed from outside India. Free shipping within India.':'Price for delivery in India. Free shipping.'):`Price for ${k.name}. India Post Speed Post shipping is about ${money(shipAmount(one),k.code)} for this piece.`;
+ const note=!priced(p.inr)?`We'll confirm the price for ${k.code==='IN'?'India':k.name} on WhatsApp.`:k.code==='IN'?(abroad()?'Price for orders placed from outside India. Shipping is added and confirmed on WhatsApp.':'Price for delivery in India. Shipping is added and confirmed on WhatsApp.'):`Price for ${k.name}. India Post Speed Post shipping is about ${money(shipAmount(one),k.code)} for this piece.`;
  const cvt=r=>PDP.u==='cm'?String(r).split('–').map(x=>Math.round(+x*2.54)).join('–'):r;
  const SZ=p.sizes?SIZES.filter(z=>p.sizes.includes(z.s)):SIZES.filter(z=>+z.s<=46);
  const catHash=p.cat==='Sarees'?'sarees':p.cat==='Kurtas'?'kurtas':'kurta-sets';
@@ -511,7 +511,7 @@ const bagTotal=(cc=S.country)=>S.bag.reduce((a,it)=>{const p=prod(it.c);return a
 const bagOnRequest=()=>S.bag.some(it=>{const p=prod(it.c);return p&&!priced(p.inr)});
 const totalLabel=(v,onreq,cc)=>v?money(v,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp';
 function sumRows(items,cc,g){const k=cty(cc);let sub=0,onreq=false;items.forEach(it=>{const p=prod(it.c);if(p&&priced(p.inr))sub+=amount(p.inr,cc,g)*it.q;else if(p)onreq=true});const sh=shipAmount(items,cc);
- return `<div class="sumrow"><span>Pieces</span><span>${sub?money(sub,cc)+(onreq?' +':''):'On request'}</span></div><div class="sumrow"><span>Shipping${k.code==='IN'?'':' by India Post Speed Post'}</span><span>${k.code==='IN'?'Free':'about '+money(sh,cc)}</span></div><div class="tot"><span>Estimated total</span><b>${sub?money(sub+sh,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp'}</b></div>`}
+ return `<div class="sumrow"><span>Pieces</span><span>${sub?money(sub,cc)+(onreq?' +':''):'On request'}</span></div><div class="sumrow"><span>Shipping${k.code==='IN'?'':' by India Post Speed Post'}</span><span>${k.code==='IN'?'Confirmed on WhatsApp':'about '+money(sh,cc)}</span></div><div class="tot"><span>${k.code==='IN'?'Total before shipping':'Estimated total'}</span><b>${sub?money(sub+sh,cc)+(onreq?' + pieces priced on request':''):'Confirmed on WhatsApp'}</b></div>`}
 function bagLine(it,i){
  const p=prod(it.c);if(!p)return '';
  return `<div class="line"><a class="th" href="#p-${p.c}">${thumb(p,it.col)}</a><div><a href="#p-${p.c}" class="bname">${esc(p.n)}</a><div class="small">${p.c}, ${esc(it.col)}, size ${it.size==='Free'?'free':it.size}</div>
@@ -526,7 +526,7 @@ function pageBag(){
  return `<div class="wrap pagehead">${STEPS(1)}<h1>Your bag</h1><p>Review your pieces, then send us a request. Nothing is charged on the website.</p></div>
  <div class="wrap two"><div>${S.bag.map(bagLine).join('')}</div>
  <aside class="summary"><h2 class="t3">Summary</h2><p class="small" style="margin:6px 0 0">Delivering to ${k.name}</p>${sumRows(S.bag,S.country,S.geo)}
- <p class="small">${k.code==='IN'?'Free shipping within India.':'Shipping is the India Post Speed Post rate to '+k.name+' for the weight of your pieces, with tracking.'} We confirm the final amount with you on WhatsApp before you pay.</p>
+ <p class="small">${k.code==='IN'?'Shipping within India is added at cost for your city and the weight of your pieces.':'Shipping is the India Post Speed Post rate to '+k.name+' for the weight of your pieces, with tracking.'} We confirm the final amount with you on WhatsApp before you pay.</p>
  <a class="btn wide" href="#request">Continue to your details</a><a class="link" href="#shop" style="display:inline-block;margin-top:16px">Keep browsing</a>${HOWTO}</aside></div>`;
 }
 function pageRequest(){
@@ -557,7 +557,7 @@ function pageRequest(){
  ${sumRows(S.bag,S.country,S.geo)}<p class="small" style="margin:0">Made to order: ready ${C.leadTime} after payment is confirmed.</p></aside></div>`;
 }
 function orderTotal(o,withShip=true){const sub=o.items.reduce((a,it)=>{const p=prod(it.c);return a+(p&&priced(p.inr)?amount(p.inr,o.cc,o.geo||'IN')*it.q:0)},0);return sub&&withShip?sub+shipAmount(o.items,o.cc):sub}
-const shipLine=o=>o.cc==='IN'?'Shipping: free within India':`Shipping by India Post Speed Post: about ${money(shipAmount(o.items,o.cc),o.cc)} (included above)`;
+const shipLine=o=>o.cc==='IN'?'Shipping within India: to be confirmed':`Shipping by India Post Speed Post: about ${money(shipAmount(o.items,o.cc),o.cc)} (included above)`;
 const orderOnReq=o=>o.items.some(it=>{const p=prod(it.c);return p&&!priced(p.inr)});
 function custMsg(o){
  const lines=o.items.map((it,i)=>{const p=prod(it.c);return `${i+1}. ${it.c} ${p?p.n:''}, ${it.col}, size ${it.size}, qty ${it.q}`}).join('\n');const m=o.m;
@@ -632,7 +632,7 @@ function pageStory(){
  <section class="chapter"><div class="label">Where our pieces live</div><div>
   <h2>Worn in six countries</h2>
   <div class="body"><p>Our clients wear their pieces to work, to pujas, to weddings and to Independence Day celebrations. They live in:</p></div>
-  <div class="clist">${[['India','Free shipping'],['United States','Shipped with tracking'],['United Kingdom','Shipped with tracking'],['Sri Lanka','Shipped with tracking'],['Malaysia','Shipped with tracking'],['United Arab Emirates','Shipped with tracking']].map(([a,b])=>`<div>${a}<small>${b}</small></div>`).join('')}</div>
+  <div class="clist">${[['India','Shipped with tracking'],['United States','Shipped with tracking'],['United Kingdom','Shipped with tracking'],['Sri Lanka','Shipped with tracking'],['Malaysia','Shipped with tracking'],['United Arab Emirates','Shipped with tracking']].map(([a,b])=>`<div>${a}<small>${b}</small></div>`).join('')}</div>
   <div class="mosaic" style="margin-top:40px">${[4,6,3,2,5,1].map(i=>`<figure><img src="${IMG('client-'+i)}" alt="A Vidisha Ethnics client" loading="lazy"></figure>`).join('')}</div>
  </div></section>
 
@@ -657,7 +657,7 @@ function pageShipping(){
  return `<div class="wrap pagehead"><div class="crumbs"><a href="#">Home</a> / Shipping and exchanges</div><h1>Shipping and exchanges</h1><p>Every piece is made to order and shipped with tracking.</p></div>
  <div class="prose">
   <table class="tbl"><thead><tr><th>Country</th><th>Prices shown in</th><th>Shipping, one kurta set</th></tr></thead><tbody>
-  ${C.countries.map(k=>`<tr><td>${k.name}</td><td>${k.currency}</td><td>${k.code==='IN'?'Free':'about '+money(shipAmount([{c:'W020',q:1}],k.code),k.code)}</td></tr>`).join('')}</tbody></table>
+  ${C.countries.map(k=>`<tr><td>${k.name}</td><td>${k.currency}</td><td>${k.code==='IN'?'At cost, confirmed on WhatsApp':'about '+money(shipAmount([{c:'W020',q:1}],k.code),k.code)}</td></tr>`).join('')}</tbody></table>
   <p class="small">Overseas parcels go by India Post International Speed Post, with tracking. The shipping charge is India Post's rate for the weight of your parcel, plus GST, and it is added to your estimated total before you send a request. Prices for clients outside India are set separately from prices in India.</p>
   <h2>How long it takes</h2><p>We make your piece in ${C.leadTime} after payment is confirmed, then dispatch it with tracking. Delivery time after dispatch depends on your city and country; we'll share the tracking link on WhatsApp.</p>
   <h2>Paying</h2><p>There is no payment on the website. Once we've confirmed your request on WhatsApp, we share the final amount and payment options for your country.</p>

@@ -83,7 +83,7 @@ ${fontLinks}
  <div class="info">
   <div class="code">${p.c}, ${esc(craft.toLowerCase())}</div>
   <h1>${esc(p.n)}</h1>
-  <div class="price">${priced(p.inr) ? inr(p.inr) + '<small>Price for delivery in India. Free shipping within India.</small>' : 'Price on request<small>We confirm the price on WhatsApp.</small>'}</div>
+  <div class="price">${priced(p.inr) ? inr(p.inr) + '<small>Price for delivery in India. Shipping is added and confirmed on WhatsApp.</small>' : 'Price on request<small>We confirm the price on WhatsApp.</small>'}</div>
   ${p.buyers >= 5 ? `<p style="margin-top:14px;font-size:15px"><b style="font-weight:500">Ordered by ${p.buyers >= 30 ? Math.floor(p.buyers / 10) * 10 + '+' : p.buyers >= 10 ? Math.floor(p.buyers / 5) * 5 + '+' : p.buyers} clients</b>${p.places && p.places.length > 1 ? `. Worn in ${esc(p.places.slice(0, -1).join(', ') + ' and ' + p.places[p.places.length - 1])}.` : ''}</p>` : ''}
   <p style="color:var(--ink2);margin-top:18px">${esc(p.d)}</p>
   <table class="tbl" style="margin-top:22px"><tbody>
