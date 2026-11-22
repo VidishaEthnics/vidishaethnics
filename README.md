@@ -59,4 +59,4 @@ Only real reviews from real clients, shared with their permission.
 - Stars show on a piece once it has 3 reviews (`reviewsMin` in config.js). Review cards show from the first one.
 
 ## Order counts
-"Ordered 30+ times" and "Worn in …" come from `orders` and `places` on each product in catalog.js, taken from the order sheet. Counts are rounded down (34 shows as 30+). Update them every month or two, and `ordersSoFar` in config.js for the home page line.
+"Ordered by 30+ clients" and "Worn in …" come from `buyers` (different clients) and `places` on each product in catalog.js, taken from the order sheet. Counts are rounded down (33 shows as 30+). Update them every month or two, and `ordersSoFar` in config.js for the home page line.

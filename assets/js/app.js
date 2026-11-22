@@ -214,6 +214,7 @@ function stars(avg,cls=''){const id='st'+(++UID);const w=Math.max(0,Math.min(5,a
 const avgTxt=v=>(Math.round(v*10)/10).toFixed(1);
 function ordersNice(n){if(!n||n<5)return null;if(n>=30)return Math.floor(n/10)*10+'+';if(n>=10)return Math.floor(n/5)*5+'+';return String(n)}
 function placesTxt(l){if(!l||l.length<2)return '';return l.length===2?l.join(' and '):l.slice(0,-1).join(', ')+' and '+l[l.length-1]}
+const peopleIcon=`<svg class="pico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="16.5" cy="8.6" r="2.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M16.8 13.8c2.3.2 3.9 1.7 4.4 4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
 const bagIcon=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>`;
 const monthYr=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'})}catch(e){return ''}};
 
@@ -261,7 +262,7 @@ function tile(p,opt){
  const alt=altSrc?`<img class="alt" src="${altSrc}" alt="" loading="lazy">`:ph.length?'':figure(p,c,{cls:'alt',vb:'-30 0 300 560',bg:'#FCF3EC'});
  return `<article class="tile"><a class="im" href="#p-${p.c}" aria-label="${esc(p.n)}">${main}${alt}${tag?`<span class="tag">${tag}</span>`:''}${ph.length?'':'<span class="soon">Photographs coming soon</span>'}</a>
  <button class="heart ${on?'on':''}" data-act="wish" data-c="${p.c}" aria-pressed="${on}" aria-label="${on?'Remove from':'Save to'} wishlist">${heartSVG}</button>
- <div class="meta"><a class="nm" href="#p-${p.c}">${esc(p.n)}</a>${(()=>{const st=revStats(p.c);return showStars(st)?`<span class="trate">${stars(st.avg)}<span>${avgTxt(st.avg)} (${st.count})</span></span>`:''})()}<span class="cr">${esc(sub(p))}</span>${p.note?`<span class="cr note">${esc(p.note)}</span>`:''}<span class="pr">${price(p.inr)}${ordersNice(p.orders)&&p.orders>=10?`<em class="tord">${ordersNice(p.orders)} orders</em>`:''}</span>
+ <div class="meta"><a class="nm" href="#p-${p.c}">${esc(p.n)}</a>${(()=>{const st=revStats(p.c);return showStars(st)?`<span class="trate">${stars(st.avg)}<span>${avgTxt(st.avg)} (${st.count})</span></span>`:''})()}<span class="cr">${esc(sub(p))}</span>${p.note?`<span class="cr note">${esc(p.note)}</span>`:''}<span class="pr">${price(p.inr)}</span>${(p.buyers||0)>=10?`<span class="tbuy">${peopleIcon}Ordered by ${ordersNice(p.buyers)} clients</span>`:''}
  <span class="dots" aria-label="${p.cols.length} colours">${p.cols.slice(0,7).map(x=>`<i style="background:${col(x)}" title="${esc(x)}"></i>`).join('')}${p.cols.length>7?`<span class="cr">+${p.cols.length-7}</span>`:''}</span></div></article>`;
 }
 const PROCESS=`<ol class="process">
@@ -406,7 +407,7 @@ function pagePDP(code){
    <h1>${esc(p.n)}</h1>
    ${(()=>{const st=revStats(p.c);return showStars(st)?`<button type="button" class="rchip" data-act="toreviews">${stars(st.avg)}<b>${avgTxt(st.avg)}</b><span>${st.count} ${st.count===1?'review':'reviews'}</span></button>`:''})()}
    <div class="price">${price(p.inr)}<small>${note}</small></div>
-   ${ordersNice(p.orders)?`<div class="proof">${bagIcon}<div><b>Ordered ${ordersNice(p.orders)} ${p.orders===1?'time':'times'}</b>${placesTxt(p.places)?`<span>Worn in ${esc(placesTxt(p.places))}</span>`:''}</div></div>`:''}
+   ${ordersNice(p.buyers)?`<div class="proof">${peopleIcon}<div><b>Ordered by ${ordersNice(p.buyers)} clients</b>${placesTxt(p.places)?`<span>Worn in ${esc(placesTxt(p.places))}</span>`:''}</div></div>`:''}
    <p style="color:var(--ink2);margin-top:18px;font-size:16.5px">${esc(p.d)}</p>
    <div class="opt"><div class="lab"><span>Colour: <b>${esc(PDP.col)}</b></span><span class="small">${p.cols.length} colours</span></div>
     <div class="swatches">${p.cols.map(c=>`<button class="swatch ${PDP.col===c?'on':''}" style="background:${col(c)}" data-act="col" data-v="${esc(c)}" aria-label="${esc(c)}" aria-pressed="${PDP.col===c}"></button>`).join('')}</div>${stand?`<p class="small" style="margin:10px 0 0">We haven't photographed ${esc(PDP.col)} yet. Ask us on WhatsApp for a picture of the fabric.</p>`:''}</div>
@@ -445,14 +446,14 @@ function reviewCard(r,p){
 }
 function reviewsBlock(p){
  const st=revStats(p.c);
- if(!st)return p.orders?`<div class="rinvite"><p>Bought this piece? <a class="link" href="#review-${p.c}">Write a review</a></p></div>`:'';
+ if(!st)return p.buyers?`<div class="rinvite"><p>Bought this piece? <a class="link" href="#review-${p.c}">Write a review</a></p></div>`:'';
  const shown=PDP.allrev?st.list:st.list.slice(0,4);
  return `<section class="reviews" id="reviews" aria-labelledby="revh">
  <div class="rhead"><h2 id="revh">Client reviews</h2><a class="link" href="#review-${p.c}">Write a review</a></div>
  <div class="rgrid">
   <div class="rsum">${showStars(st)?`<div class="ravg">${avgTxt(st.avg)}</div>${stars(st.avg,'lg')}<p>Based on ${st.count} ${st.count===1?'review':'reviews'}</p>
    <ul class="rdist">${st.dist.map((n,i)=>`<li><span>${5-i}</span><i><b style="width:${st.count?Math.round(n/st.count*100):0}%"></b></i><span>${n}</span></li>`).join('')}</ul>`:`<p class="small" style="margin:0">From clients who ordered this piece.</p>`}
-   ${ordersNice(p.orders)?`<p class="rorders">Ordered ${ordersNice(p.orders)} times since ${esc(C.ordersSince||'2025')}</p>`:''}</div>
+   ${ordersNice(p.buyers)?`<p class="rorders">Ordered by ${ordersNice(p.buyers)} clients since ${esc(C.ordersSince||'2025')}</p>`:''}</div>
   <div class="rlist">${shown.map(r=>reviewCard(r,p)).join('')}
    ${st.list.length>shown.length?`<button type="button" class="btn ghost" data-act="allrev">Show all ${st.count} reviews</button>`:''}</div>
  </div></section>`;

@@ -644,3 +644,6 @@ img.lq{background-size:cover;background-position:center;background-repeat:no-rep
 }
 h1,h2,h3,h4,.statement,.teaser blockquote,.quote p,.proofband p,.ravg,.process .n,.step .n,.next .n,.kpi b,.result .big{font-variant-numeric:lining-nums}
 #reviews{scroll-margin-top:110px}
+.tbuy{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);margin-top:3px}
+.tbuy .pico{width:15px;height:15px;color:var(--gold);flex:none}
+.proof .pico{width:22px;height:22px}
