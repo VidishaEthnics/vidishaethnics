@@ -647,3 +647,8 @@ h1,h2,h3,h4,.statement,.teaser blockquote,.quote p,.proofband p,.ravg,.process .
 .tbuy{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);margin-top:3px}
 .tbuy .pico{width:15px;height:15px;color:var(--gold);flex:none}
 .proof .pico{width:22px;height:22px}
+/* Home: tighter rhythm between the hero, the proof line and Best sellers */
+.hero{padding-bottom:32px}
+.hero+.sec{padding-top:72px}
+.heroproof{margin:clamp(26px,4vh,40px) 0 0;padding-top:20px;border-top:1px solid var(--goldline);max-width:31em;font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(18px,1.45vw,21px);line-height:1.45;color:var(--ink2);font-variant-numeric:lining-nums;text-wrap:pretty}
+@media (max-width:860px){.hero{padding-bottom:28px}.hero+.sec{padding-top:52px}.heroproof{font-size:17.5px;margin-top:26px}}

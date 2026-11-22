@@ -288,11 +288,11 @@ function pageHome(){
    <h1 class="reveal d2">From local artisans to your wardrobe</h1>
    <p class="lede reveal d3">Lucknow chikankari, hand-stitched on mul, chanderi, kota doria and more. Every piece is made to your order, in your size.</p>
    <div class="ctas reveal d3"><a class="btn" href="#shop">Explore the collection</a><a class="btn ghost" href="#story">Our story</a></div>
+   ${C.homeProof?`<p class="heroproof reveal d3">${esc(C.homeProof)}</p>`:''}
   </div>
   <figure class="reveal d2"><div style="position:relative"><div class="frame" aria-hidden="true"></div><div class="archimg"><img src="${IMG('s010-offwhite-2')}" alt="Off-white tissue chikankari saree with a gold border" fetchpriority="high"></div></div>
    <figcaption><a href="#p-S010">${esc(hs.n)}</a><span>${price(hs.inr)}</span></figcaption></figure>
  </section>
- ${C.ordersSoFar?`<section class="proofband"><div class="wrap"><p>More than ${esc(String(C.ordersSoFar).replace('+',''))} pieces made to order since ${esc(C.ordersSince||'2025')}, for women across India and in Dubai, Malaysia and the USA.</p></div></section>`:''}
  <section class="sec"><div class="wrap">
   <div class="sechead"><div><h2>Best sellers</h2><p>Our most-ordered pieces since ${esc(C.ordersSince||'2025')}.</p></div><a class="link" href="#shop">Shop all</a></div>
   <div class="grid">${loved.map(p=>tile(p,{nobadge:1})).join('')}</div>
